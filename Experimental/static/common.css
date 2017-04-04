@@ -1,0 +1,38 @@
+table, th, td {
+   border: 1px solid black;
+   width: 100%;
+}
+img{
+    float: right;
+    width:200px; 
+    height:auto;
+}
+.vote {
+  display: inline-block;
+  overflow: hidden;
+  width: 40px;
+  height: 25px;
+  cursor: pointer;
+  background: url('http://i.stack.imgur.com/iqN2k.png');
+  background-position: 0 -25px;
+} 
+.vote.on {
+  background-position: 0 2px;
+}
+.downVote {
+     display: inline-block;
+  overflow: hidden;
+  width: 40px;
+  height: 25px;
+  cursor: pointer;
+  background: url('http://i.stack.imgur.com/iqN2k.png');
+  background-position: 0 -25px;
+  transform: rotate(180deg);
+}
+.downVote.on {
+  background-position: 0 2px;
+}
+.text{
+    margin-left: 100px;
+    float: left;
+}
