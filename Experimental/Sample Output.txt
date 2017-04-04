@@ -1,0 +1,120 @@
+Tuesday
+
+100
+
+ BREAKFAST:
+
+6950995 = old-fashioned oatmeal
+6950557 = applewood bacon
+6950553 = spinach tofu scramble
+6950536 = buttermilk biscuit with triple berry compote
+6950534 = scrambled eggs
+6950546 = crispy hash browns
+
+ MOENCH:
+
+5769477 = Iced caffe americano 20 oz
+5769476 = iced caffe americano 16 oz
+5769473 = iced caffe americano 12 oz
+5725123 = caffe misto 12 fl oz
+5725125 = caffe misto 20 fl oz
+5725124 = caffe misto 16 fl oz
+5547941 = coconut coffee syrup
+5547940 = cinnamon coffee syrup
+5547943 = hazelnut coffee syrup
+5547942 = dark chocolate coffee syrup
+5547945 = peppermint coffee syrup
+5547944 = Irish creme coffee syrup
+5547947 = strawberry coffee syrup
+5547946 = raspberry coffee syrup
+5547948 = toffee nut coffee syrup
+5547897 = iced caramel macchiato 20 fl oz
+5547896 = iced caramel macchiato 16 fl oz
+5547895 = iced caramel macchiato 12 fl oz
+5547894 = caramel macchiato 20 fl oz
+5547893 = caramel macchiato 16 fl oz
+5547892 = caramel macchiato 12 fl oz
+5547891 = iced coffee
+5547890 = caffe Americano
+5725286 = flavored iced tea | unsweetened
+5547950 = vanilla sugar free coffee syrup
+5547951 = white chocolate coffee syrup
+5601542 = espresso dupio
+5769456 = espresso con panna solo
+5769459 = espresso con panna dupio
+5547929 = granulated sugar
+5547887 = iced tea | unsweetened
+5547923 = hot chocolate 12 fl oz
+5547921 = espresso macchiato single 2%
+5547920 = white chocolate mocha 2% milk 20 fl oz
+5547888 = black coffee
+5547889 = espresso solo
+5547925 = hot chocolate 20 fl oz
+5547924 = hot chocolate 16 fl oz
+5737149 = lemonade
+5601530 = hot tea
+5769448 = vanilla steamer 20 oz
+5769447 = vanilla steamer 16 oz
+5769444 = vanilla steamer 12 oz
+5547938 = caramel coffee syrup
+5547939 = caramel sugar free coffee syrup
+5547930 = honey
+5547931 = agave nectar
+5547932 = Splenda
+5547933 = 2% milk
+5547934 = skim milk
+5547935 = half & half
+5547936 = almond milk
+5547937 = soy milk
+5737759 = iced white chocolate mocha 12 fl oz
+5601524 = iced caffe latte 2% milk 12 fl oz
+5601525 = iced caffe mocha 2% milk 16 fl oz
+5601526 = iced white chocolate mocha 2% milk 16 fl oz
+5601527 = espresso macchiato double 2%
+5769432 = white hot chocolate 20 oz
+5547905 = caffe latte 2% milk 20 fl oz
+5547904 = caffe latte 2% milk 16 fl oz
+5547907 = caffe mocha 2% milk 16 fl oz
+5547906 = caffe mocha 2% milk 12 fl oz
+5547903 = caffe latte 2% milk 12 fl oz
+5547909 = cappuccino 2% milk 12 fl oz
+5547908 = caffe mocha 2% milk 20 fl oz
+5769428 = white hot chocolate 16 oz
+5769421 = white hot chocolate 12 oz
+5547912 = iced caffe latte 2% milk 16 fl oz
+5547913 = iced caffe latte 2% milk 20 fl oz
+5547910 = cappuccino 2% milk 16 fl oz
+5547911 = cappuccino 2% milk 20 fl oz
+5547916 = iced white chocolate mocha 2% milk 16 fl oz
+5547917 = iced white chocolate mocha 2% milk 20 fl oz
+5547914 = iced caffe mocha 2% milk 16 fl oz
+5547915 = iced caffe mocha 2% milk 20fl oz
+5547918 = white chocolate mocha 2% milk 12 fl oz
+5547919 = white chocolate mocha 2% milk 16 fl oz
+5737401 = vanilla coffee syrup
+5737771 = iced caffe mocha 2% milk 12 fl oz
+
+ LUNCH:
+
+6979183 = portabello and pepper calzone
+6949679 = glazed cinnamon breadsticks
+6950991 = cheeseless roasted vegetable pizza
+6979050 = vietnamese chicken with mint, ginger and chiles
+6951014 = boursin chicken pasta
+6950980 = grilled cheese
+6950984 = cheese pizza
+6951002 = barbeque chicken pizza
+6950974 = Fischer Farms beef burger
+6950564 = house-made bean burger
+
+ DINNER:
+
+6991151 = all beef hot dog
+6979183 = portabello and pepper calzone
+6949679 = glazed cinnamon breadsticks
+6991127 = Spring Fling!
+6991124 = Spring Fling!
+6950980 = grilled cheese
+6950984 = cheese pizza
+6951002 = barbeque chicken pizza
+6950564 = house-made bean burger
