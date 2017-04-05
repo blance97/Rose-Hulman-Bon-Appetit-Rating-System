@@ -6,22 +6,31 @@ import sys
 from flask import Flask, jsonify, current_app, request
 from bs4 import BeautifulSoup
 import logging
+import schedule
+import time
 
 app = Flask(__name__)
 app.logger.addHandler(logging.StreamHandler(sys.stdout))
 app.logger.setLevel(logging.DEBUG)
 
 
-wiki = "http://rose-hulman.cafebonappetit.com/"
 FOODLIST = 30
 BREAKFAST = 31
 MOENCH = 32
 LUNCH = 33
 DINNER = 34
+wiki = "http://rose-hulman.cafebonappetit.com/"
 page = urllib2.urlopen(wiki)
 soup =  BeautifulSoup(page, "html.parser")
-s = soup.find_all("script")
 
+def setup():
+    global page 
+    global soup 
+    soup =  BeautifulSoup(page, "html.parser")
+    page = urllib2.urlopen(wiki)
+
+
+s = soup.find_all("script")
 breakfastData = {}
 moenchData= {}
 lunchData= {}
@@ -120,8 +129,11 @@ def getMatch(mealOfDay):
                     toReturn.append(str(data.keys()[x] + " = " + str(data[data.keys()[x]]['label'])))
         return toReturn 
 if __name__ == "__main__":
-    app.run(host='137.112.136.75', port= 3333)
-
+    schedule.every().day.at("07:00").do(setup)
+    app.run(host='0.0.0.0')
+    while True:
+        schedule.run_pending()
+        time.sleep(60) # wait one minute
 
 
 # getMatch(BREAKFAST)
