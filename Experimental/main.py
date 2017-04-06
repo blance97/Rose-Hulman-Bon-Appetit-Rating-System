@@ -26,6 +26,7 @@ soup =  BeautifulSoup(page, "html.parser")
 def setup():
     global page 
     global soup 
+    app.logger.debug("UPDATE AT 7")
     soup =  BeautifulSoup(page, "html.parser")
     page = urllib2.urlopen(wiki)
 
