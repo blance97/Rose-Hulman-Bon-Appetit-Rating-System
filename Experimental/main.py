@@ -31,17 +31,17 @@ def setup():
     app.logger.debug("UPDATE AT 7")
     soup =  BeautifulSoup(page, "html.parser")
     page = urllib2.urlopen(wiki)
+    global conn 
     conn = psycopg2.connect(database="BoneApp", user="postgres", password="", host="127.0.0.1", port="5432")
-    print "Opened database successfully"
+    global cur
     cur = conn.cursor()
-    cur.execute('''CREATE TABLE Ratings
+    cur.execute('''CREATE TABLE IF NOT EXISTS Ratings
        (FoodID INT PRIMARY KEY     NOT NULL,
-       Time           timestamp     NOT NULL,
        Comment            TEXT     NOT NULL,
-       MenuID        CHAR(50));''')
-    print "Table created successfully"
+       MenuID        CHAR(50),
+       Time           timestamp     NOT NULL);''')
     conn.commit()
-    conn.close()
+
 
 
 s = soup.find_all("script")
@@ -61,6 +61,7 @@ try:
     print("\n" + str(len(data)))
 except:
     print("getting data failed.  Either the html structure changed or day/meal isn't correct")
+
 
 #returns first and end character for certain food meals
 def findStartAndEnd(mealOfDay):
@@ -90,6 +91,15 @@ def findStartAndEnd(mealOfDay):
             dinnerData = json.loads(str(s[DINNER])[start+22:end-11])
         except:
             print("Data cannot be loaded")
+
+def insertRating(data):
+    query = "INSERT INTO RATINGS ( FoodID, Comment, MenuID, Time) VALUES (%s,%s,%s,CURRENT_TIMESTAMP)"
+    data = (1, "THIS FOOD IS SOOOOOOOOO BAD", "3")
+    cur.execute(query, data)
+    conn.commit()
+	# retrieve the records from the database
+	# records = cursor.fetchall()
+
 
 @app.route("/")
 def index():
@@ -158,6 +168,8 @@ def getMatch(mealOfDay):
         return toReturn 
 if __name__ == "__main__":
     setup()
+    insertRating("fat")
+    conn.close()
     app.run(host='0.0.0.0')
     
     
