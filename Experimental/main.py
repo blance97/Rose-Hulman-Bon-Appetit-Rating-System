@@ -8,6 +8,8 @@ from bs4 import BeautifulSoup
 import logging
 import schedule
 import time
+import psycopg2
+
 
 app = Flask(__name__)
 app.logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -29,6 +31,17 @@ def setup():
     app.logger.debug("UPDATE AT 7")
     soup =  BeautifulSoup(page, "html.parser")
     page = urllib2.urlopen(wiki)
+    conn = psycopg2.connect(database="BoneApp", user="postgres", password="", host="127.0.0.1", port="5432")
+    print "Opened database successfully"
+    cur = conn.cursor()
+    cur.execute('''CREATE TABLE Ratings
+       (FoodID INT PRIMARY KEY     NOT NULL,
+       Time           timestamp     NOT NULL,
+       Comment            TEXT     NOT NULL,
+       MenuID        CHAR(50));''')
+    print "Table created successfully"
+    conn.commit()
+    conn.close()
 
 
 s = soup.find_all("script")
@@ -43,11 +56,13 @@ print(calendar.day_name[my_date.weekday()])
 start = str(s[30]).find("Bamco.menu_items")
 end = str(s[30]).find("Bamco.cor_icons")
 foods = str(s[30])[start+19:end-6]
-data = json.loads(foods)
-print("\n" + str(len(data)))
+try:
+    data = json.loads(foods)
+    print("\n" + str(len(data)))
+except:
+    print("getting data failed.  Either the html structure changed or day/meal isn't correct")
 
 #returns first and end character for certain food meals
-# TODO: I DONT ACTUALLY NEED THIS FUNCTION
 def findStartAndEnd(mealOfDay):
     global breakfastData
     global moenchData
@@ -56,13 +71,25 @@ def findStartAndEnd(mealOfDay):
     start = str(s[mealOfDay]).find("Bamco.dayparts[")
     end = str(s[mealOfDay]).find("</script>")
     if(mealOfDay == BREAKFAST):
-        breakfastData = json.loads(str(s[BREAKFAST])[start+22:end-11])
+        try:
+            breakfastData = json.loads(str(s[BREAKFAST])[start+22:end-11])
+        except:
+            print("Data Cannot be loaded")
     elif(mealOfDay == MOENCH):
-        moenchData = json.loads(str(s[MOENCH])[start+22:end-11])
+        try:
+            moenchData = json.loads(str(s[MOENCH])[start+22:end-11])
+        except:
+            print("Data Cannot be loaded")
     elif(mealOfDay == LUNCH):
-        lunchData = json.loads(str(s[LUNCH])[start+22:end-11])
+        try:
+            lunchData = json.loads(str(s[LUNCH])[start+22:end-11])
+        except:
+            print("Data Cannot be loaded")
     elif(mealOfDay == DINNER):
-        dinnerData = json.loads(str(s[DINNER])[start+22:end-11])
+        try:
+            dinnerData = json.loads(str(s[DINNER])[start+22:end-11])
+        except:
+            print("Data cannot be loaded")
 
 @app.route("/")
 def index():
@@ -130,14 +157,8 @@ def getMatch(mealOfDay):
                     toReturn.append(str(data.keys()[x] + " = " + str(data[data.keys()[x]]['label'])))
         return toReturn 
 if __name__ == "__main__":
-    schedule.every().day.at("07:00").do(setup)
+    setup()
     app.run(host='0.0.0.0')
-    while True:
-        schedule.run_pending()
-        time.sleep(60) # wait one minute
+    
+    
 
-
-# getMatch(BREAKFAST)
-# getMatch(MOENCH)
-# getMatch(LUNCH)
-# getMatch(DINNER)
