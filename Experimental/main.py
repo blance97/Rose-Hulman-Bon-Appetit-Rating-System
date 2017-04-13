@@ -168,9 +168,6 @@ def getMatch(mealOfDay):
         return toReturn 
 if __name__ == "__main__":
     setup()
-    insertRating("fat")
+    # insertRating("fat")
     conn.close()
     app.run(host='0.0.0.0')
-    
-    
-

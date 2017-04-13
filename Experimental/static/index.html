@@ -1,34 +1,57 @@
+
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="static/common.css">
-    <script src="static/script.js"></script>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0"/>
+  <title>Webname Login</title>
+  <!-- CSS  -->
+    <link href="images/favicon.ico" rel="shortcut icon">
+
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="static/style/materialize.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+  <link href="static/style/login.css" type="text/css" rel="stylesheet" media="screen,projection"/>
 </head>
+<body class="page-login">
+  <div class="center">
+      <div class="card bordered z-depth-2" style="margin:0% auto; max-width:400px;">
+        <div class="card-header">
+           <i class="material-icons medium white-text">perm_identity</i>
 
-<body>
-    <nav class="navbar navbar-inverse">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <a class="navbar-brand" href="#">Best Meme</a>
-            </div>
-            <ul class="nav navbar-nav">
-                <li class="active"><a href="#" onclick="getMoench()">Home</a></li>
-                <li><a href="#1" onclick="getBreakfast()">Breakfast</a></li>
-                <li><a href="#2" onclick="getLunch()">Lunch</a></li>
-                <li><a href="#3" onclick="getDinner()">Dinner</a></li>
-            </ul>
         </div>
-    </nav>
-
-    <div id="here_table">
-    <table>
-    </table>
-</div>
-
-</body>
-
+        <div class="card-content">
+          <form id="myForm" method="post" action="/login">
+            <div class="input-field col s12">
+              <input id="email" type="email" name="email" class="validate" required="" aria-required="true">
+              <label for="email">Email</label>
+            </div>
+            <div class="input-field col s12">
+              <input id="password" type="password" name="password" class="validate" required="">
+              <label for="password">Password</label>
+            </div>
+              <p id="result" class="red-text text-darken-2"></p>
+            <br>
+              <input type="checkbox" class="filled-in" id="filled-in-box"/>
+              <label for="filled-in-box">Remember me</label>
+              <button type="submit" class="btn blue-grey right waves-effect waves-light white-text">Login</button>
+          </form>
+        </div>
+        <div class="card-action clearfix">
+          <div class="row">
+            <div class="col s6 left-align">
+              <a href="static/forgotPass.html" class="orange-text tooltipped" data-position="top" data-delay="50" data-tooltip="Forgot your password?">Forgot your password?</a>
+            </div>
+            <div class="col s6 right-align">
+              <a href="static/register.html" class="orange-text tooltipped" data-position="top" data-delay="50" data-tooltip="Register">Register</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <!--  Scripts-->
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+  <script src="static/js/materialize.min.js"></script>
+	<script src="static/js/login.js"></script>
+  <span id="info_login"></span>
+  </body>
 </html>
