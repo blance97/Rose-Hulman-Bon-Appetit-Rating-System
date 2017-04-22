@@ -9,21 +9,40 @@ import logging
 import schedule
 import time
 import psycopg2
-
-
+import ConfigParser
+from Database import myDB
+""" Initial setup of imports and stuff"""
 app = Flask(__name__)
 app.logger.addHandler(logging.StreamHandler(sys.stdout))
 app.logger.setLevel(logging.DEBUG)
+Config = ConfigParser.ConfigParser()
+Config.read("dev.conf")
+wiki = sys.argv[2] #"http://rose-hulman.cafebonappetit.com/"
+print str(wiki) + " link "
+page = urllib2.urlopen(wiki)
+soup =  BeautifulSoup(page, "html.parser")
+s = soup.find_all("script")
+breakfastData = {}
+moenchData= {}
+lunchData= {}
+dinnerData= {}
+Users = ["127.0.0.1"]
 
-
+#Database credentials
+databaseName = Config.get('Development', 'databaseName')
+databasePasswd = Config.get('Development', 'password')
+databaseHost = Config.get('Development', 'host')
+port = Config.get('Development', 'port')
+DB = myDB(myDB, databaseName, databasePasswd, databaseHost, port)
+DB.insertFood(1, 't', 't', 'f', 'f', 'eggs', 'good', 2.3)
+""" contants """
 FOODLIST = 30
 BREAKFAST = 31
 MOENCH = 32
 LUNCH = 33
 DINNER = 34
-wiki = "http://rose-hulman.cafebonappetit.com/"
-page = urllib2.urlopen(wiki)
-soup =  BeautifulSoup(page, "html.parser")
+
+
 
 def setup():
     global page 
@@ -31,25 +50,7 @@ def setup():
     app.logger.debug("UPDATE AT 7")
     soup =  BeautifulSoup(page, "html.parser")
     page = urllib2.urlopen(wiki)
-    global conn 
-    conn = psycopg2.connect(database="BoneApp", user="postgres", password="", host="127.0.0.1", port="5432")
-    global cur
-    cur = conn.cursor()
-    cur.execute('''CREATE TABLE IF NOT EXISTS Ratings
-       (FoodID INT PRIMARY KEY     NOT NULL,
-       Comment            TEXT     NOT NULL,
-       MenuID        CHAR(50),
-       Time           timestamp     NOT NULL);''')
-    conn.commit()
 
-
-
-s = soup.find_all("script")
-breakfastData = {}
-moenchData= {}
-lunchData= {}
-dinnerData= {}
-Users = ["127.0.0.1"]
 
 my_date = date.today()
 print(calendar.day_name[my_date.weekday()])
@@ -92,15 +93,6 @@ def findStartAndEnd(mealOfDay):
         except:
             print("Data cannot be loaded")
 
-def insertRating(data):
-    query = "INSERT INTO RATINGS ( FoodID, Comment, MenuID, Time) VALUES (%s,%s,%s,CURRENT_TIMESTAMP)"
-    data = (1, "THIS FOOD IS SOOOOOOOOO BAD", "3")
-    cur.execute(query, data)
-    conn.commit()
-	# retrieve the records from the database
-	# records = cursor.fetchall()
-
-
 @app.route("/")
 def index():
     ip = request.remote_addr
@@ -126,6 +118,22 @@ def dinner():
 @app.route("/getMoench")
 def moench():
     return jsonify(getMatch(MOENCH))
+@app.route("/ratings")
+def renderRatings():
+    return current_app.send_static_file('rating.html')
+@app.route("/login")
+def login():
+    return current_app.send_static_file('rating.html')
+
+# def storeFoods():
+#     findStartAndEnd(BREAKFAST)
+#     findStartAndEnd(MOENCH)
+#     findStartAndEnd(LUNCH)
+#     findStartAndEnd(DINNER)
+#     for x in range(len(data)):
+#          for y in range(len(breakfastData['stations'][0]['items'])):
+#                 if(breakfastData['stations'][0]['items'][y] == data.keys()[x]):
+                    
 
 def getMatch(mealOfDay):
     global breakfastData
@@ -143,7 +151,6 @@ def getMatch(mealOfDay):
             for y in range(len(breakfastData['stations'][0]['items'])):
                 if(breakfastData['stations'][0]['items'][y] == data.keys()[x]):
                     toReturn.append(str(data.keys()[x] + " = " + str(data[data.keys()[x]]['label'])))
-                    # print(str(data.keys()[x] + " = " + str(data[data.keys()[x]]['label'])))
         return toReturn 
     elif(mealOfDay == MOENCH):
         print("\n MOENCH: \n")
@@ -157,6 +164,7 @@ def getMatch(mealOfDay):
         for x in range(len(data)):
             for y in range(len(lunchData['stations'][0]['items'])):
                 if(lunchData['stations'][0]['items'][y] == data.keys()[x]):
+                    app.logger.debug( str( data[data.keys()[x]]['cor_icon']) + " FOR: " +  str(data[data.keys()[x]]['label'] ))
                     toReturn.append(str(data.keys()[x] + " = " + str(data[data.keys()[x]]['label'])))
         return toReturn 
     elif(mealOfDay == DINNER):
@@ -168,6 +176,4 @@ def getMatch(mealOfDay):
         return toReturn 
 if __name__ == "__main__":
     setup()
-    # insertRating("fat")
-    conn.close()
     app.run(host='0.0.0.0')
