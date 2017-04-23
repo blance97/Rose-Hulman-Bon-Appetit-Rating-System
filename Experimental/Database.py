@@ -7,7 +7,8 @@ class myDB(object):
     def __init__(self, databaseName, user, password, host, port):
         global conn
         global cur
-        conn = psycopg2.connect(database="BoneApp", user="postgres", password="", host="127.0.0.1", port="5432")
+        #print("DB NAME : " + str(databaseName) + " DBPASSWORD: " + str(password) + " databaseHOST: " + host + " PORT: " + str(port))
+        conn = psycopg2.connect(database=databaseName, user=user, password=password, host=host, port=port)
         cur = conn.cursor()
 
     def insertFood(self, FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, FoodDescription, AvgRating):

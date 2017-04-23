@@ -28,12 +28,16 @@ lunchData= {}
 dinnerData= {}
 Users = ["127.0.0.1"]
 
+
+
 #Database credentials
 databaseName = Config.get('Development', 'databaseName')
+databaseUser = Config.get('Development', 'user')
 databasePasswd = Config.get('Development', 'password')
 databaseHost = Config.get('Development', 'host')
 port = Config.get('Development', 'port')
-DB = myDB(myDB, databaseName, databasePasswd, databaseHost, port)
+
+DB = myDB(databaseName,databaseUser,  databasePasswd, databaseHost, port)
 DB.insertFood(1, 't', 't', 'f', 'f', 'eggs', 'good', 2.3)
 """ contants """
 FOODLIST = 30
