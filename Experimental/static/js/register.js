@@ -9,7 +9,7 @@ $(document).ready(function() {
             type: "POST",
             data: postData,
             success: function(data, textStatus, jqXHR) {
-                document.location.href = '/login.html';
+                document.location.href = '/';
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.log(jqXHR.status)

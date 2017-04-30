@@ -3,7 +3,7 @@ import json
 from datetime import date
 import calendar
 import sys
-from flask import Flask, jsonify, current_app, request
+from flask import Flask, jsonify, current_app, request,abort
 from bs4 import BeautifulSoup
 import logging
 import schedule
@@ -11,8 +11,11 @@ import time
 import psycopg2
 import ConfigParser
 from Database import myDB
+
 """ Initial setup of imports and stuff"""
+
 app = Flask(__name__)
+app.secret_key = "any random string"
 app.logger.addHandler(logging.StreamHandler(sys.stdout))
 app.logger.setLevel(logging.DEBUG)
 Config = ConfigParser.ConfigParser()
@@ -38,7 +41,9 @@ databaseHost = Config.get('Development', 'host')
 port = Config.get('Development', 'port')
 
 DB = myDB(databaseName,databaseUser,  databasePasswd, databaseHost, port)
-DB.insertFood(1, 't', 't', 'f', 'f', 'eggs', 'good', 2.3)
+
+
+
 """ contants """
 FOODLIST = 30
 BREAKFAST = 31
@@ -54,7 +59,9 @@ def setup():
     app.logger.debug("UPDATE AT 7")
     soup =  BeautifulSoup(page, "html.parser")
     page = urllib2.urlopen(wiki)
-
+    getMatch(BREAKFAST)
+    getMatch(LUNCH)
+    getMatch(DINNER)
 
 my_date = date.today()
 print(calendar.day_name[my_date.weekday()])
@@ -110,6 +117,28 @@ def index():
     app.logger.debug(curUsers)
     app.logger.debug("\n")
     return current_app.send_static_file('index.html')
+@app.route("/ratings")
+def renderRatings():
+    return current_app.send_static_file('rating.html')
+@app.route("/register")
+def renderRegister():
+    return current_app.send_static_file('register.html')
+
+@app.route("/signup",  methods=['GET', 'POST'])
+def register(): 
+    app.logger.debug("Current Users: \n")
+    Fname=request.form['Firstname']
+    Lname=request.form['Lastname']
+    username=request.form['username']
+    email=request.form['email']
+    password1=request.form['password']
+    password2=request.form['cpassword']
+
+    app.logger.debug("Password1: " + str(password1) + " Password2: " + str(password2))
+    if password1 != password2:
+        abort(400, '<Passwords do not match>')
+    DB.registerUser(email, Fname, Lname, username, password1)
+    return current_app.send_static_file('register.html')
 @app.route("/getBreakfast")
 def breakfast():
     return jsonify(getMatch(BREAKFAST))
@@ -122,22 +151,13 @@ def dinner():
 @app.route("/getMoench")
 def moench():
     return jsonify(getMatch(MOENCH))
-@app.route("/ratings")
-def renderRatings():
-    return current_app.send_static_file('rating.html')
+@app.route("/getHours")
+def getHours():
+    return jsonify(DB.getHours())
 @app.route("/login")
 def login():
     return current_app.send_static_file('rating.html')
 
-# def storeFoods():
-#     findStartAndEnd(BREAKFAST)
-#     findStartAndEnd(MOENCH)
-#     findStartAndEnd(LUNCH)
-#     findStartAndEnd(DINNER)
-#     for x in range(len(data)):
-#          for y in range(len(breakfastData['stations'][0]['items'])):
-#                 if(breakfastData['stations'][0]['items'][y] == data.keys()[x]):
-                    
 
 def getMatch(mealOfDay):
     global breakfastData
@@ -154,6 +174,8 @@ def getMatch(mealOfDay):
         for x in range(len(data)):
             for y in range(len(breakfastData['stations'][0]['items'])):
                 if(breakfastData['stations'][0]['items'][y] == data.keys()[x]):
+                    #app.logger.debug(int(data.keys()[x]))
+                    DB.insertFood(int(data.keys()[x]), 't', 't', 'f', 'f',str(data[data.keys()[x]]['label']), 'good', 2.3)
                     toReturn.append(str(data.keys()[x] + " = " + str(data[data.keys()[x]]['label'])))
         return toReturn 
     elif(mealOfDay == MOENCH):
@@ -161,6 +183,7 @@ def getMatch(mealOfDay):
         for x in range(len(data)):
             for y in range(len(moenchData['stations'][0]['items'])):
                 if(moenchData['stations'][0]['items'][y] == data.keys()[x]):
+                    DB.insertFood(int(data.keys()[x]), 't', 't', 'f', 'f',str(data[data.keys()[x]]['label']), 'good', 2.3)
                     toReturn.append(str(data.keys()[x] + " = " + str(data[data.keys()[x]]['label'])))
         return toReturn 
     elif(mealOfDay == LUNCH):
@@ -168,7 +191,7 @@ def getMatch(mealOfDay):
         for x in range(len(data)):
             for y in range(len(lunchData['stations'][0]['items'])):
                 if(lunchData['stations'][0]['items'][y] == data.keys()[x]):
-                    app.logger.debug( str( data[data.keys()[x]]['cor_icon']) + " FOR: " +  str(data[data.keys()[x]]['label'] ))
+                    DB.insertFood(int(data.keys()[x]), 't', 't', 'f', 'f',str(data[data.keys()[x]]['label']), 'good', 2.3)
                     toReturn.append(str(data.keys()[x] + " = " + str(data[data.keys()[x]]['label'])))
         return toReturn 
     elif(mealOfDay == DINNER):
@@ -176,6 +199,7 @@ def getMatch(mealOfDay):
         for x in range(len(data)):
             for y in range(len(dinnerData['stations'][0]['items'])):
                 if(dinnerData['stations'][0]['items'][y] == data.keys()[x]):
+                    DB.insertFood(int(data.keys()[x]), 't', 't', 'f', 'f',str(data[data.keys()[x]]['label']), 'good', 2.3)  
                     toReturn.append(str(data.keys()[x] + " = " + str(data[data.keys()[x]]['label'])))
         return toReturn 
 if __name__ == "__main__":
