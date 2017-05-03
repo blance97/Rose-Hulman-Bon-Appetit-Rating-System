@@ -126,23 +126,19 @@ def renderRegister():
 
 @app.route("/signup",  methods=['GET', 'POST'])
 def register(): 
-    app.logger.debug("Current Users: \n")
-    Fname=request.form['Firstname']
-    Lname=request.form['Lastname']
     username=request.form['username']
     email=request.form['email']
     password1=request.form['password']
     password2=request.form['cpassword']
 
-    app.logger.debug("Password1: " + str(password1) + " Password2: " + str(password2))
+    app.logger.debug("email: " + email + "\n" + "Username: " + username + "\nPassword1: " + str(password1) + " Password2: " + str(password2))
     if password1 != password2:
         abort(400, '<Passwords do not match>')
-    if DB.registerUser(str(email), str(Fname), str(Lname), str(username), str(password1)) != 1:
+    if DB.registerUser(str(email), str(username), str(password1)) != 1:
         app.logger.debug("ITS ZERO!")
         abort(401, "USERNAME ALREADY EXISTS")
-        return current_app.send_static_file('register.html')
     app.logger.debug("NOT ZERO!")
-    return current_app.send_static_file('/')
+    return current_app.send_static_file('index.html')
 @app.route("/getBreakfast")
 def breakfast():
     return jsonify(getMatch(BREAKFAST))
