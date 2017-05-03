@@ -137,8 +137,12 @@ def register():
     app.logger.debug("Password1: " + str(password1) + " Password2: " + str(password2))
     if password1 != password2:
         abort(400, '<Passwords do not match>')
-    DB.registerUser(email, Fname, Lname, username, password1)
-    return current_app.send_static_file('register.html')
+    if DB.registerUser(str(email), str(Fname), str(Lname), str(username), str(password1)) != 1:
+        app.logger.debug("ITS ZERO!")
+        abort(401, "USERNAME ALREADY EXISTS")
+        return current_app.send_static_file('register.html')
+    app.logger.debug("NOT ZERO!")
+    return current_app.send_static_file('/')
 @app.route("/getBreakfast")
 def breakfast():
     return jsonify(getMatch(BREAKFAST))

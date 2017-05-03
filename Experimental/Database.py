@@ -11,7 +11,7 @@ class myDB(object):
         cur = conn.cursor()
 
     def insertFood(self, FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, FoodDescription, AvgRating):
-        query = "INSERT INTO food ( FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, FoodDescription, AvgRating) Values (%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT(FoodID) DO NOTHING"
+        query = "INSERT INTO Food ( FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, Description,   Rating) Values (%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT(FoodID) DO NOTHING"
         data = (FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, FoodDescription, AvgRating)
         cur.execute(query, data)
         conn.commit()
@@ -22,13 +22,16 @@ class myDB(object):
         data = (Username,)
         cur.execute(query, data)
         rowcount = cur.rowcount
+        print str(rowcount)
         if rowcount > 1: # if username already exists
-            return 0
+            return 1
         else:
+            print "INSERTING"
             query1 = "INSERT INTO Customer ( email, fname, lname, password, Username) Values (%s,%s,%s,%s,%s)"
             data = (email,Fname, Fname, LName, Username)
+            cur.execute(query, data)
             conn.commit()
-        return 1
+        return 0
     def getFoods(self, Meal):
         query = "SELECT * FROM FOOD"
         cur.execute(query)
@@ -39,4 +42,3 @@ class myDB(object):
         # retrieve the records from the database
         records = cur.fetchall()
         return records
-        
