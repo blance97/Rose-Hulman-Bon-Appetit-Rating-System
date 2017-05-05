@@ -29,7 +29,7 @@ class myDB(object):
         else:
             print "INSERTING: Email: " + email + " password: " + Password + " Username: " + Username
             query1 = "INSERT INTO Customer ( email,favorite, password, Username) Values (%s,%s,%s,%s)"
-            data1 = (email,7158767, Password, Username)
+            data1 = (email,5547887, Password, Username)
             cur.execute(query1, data1)
             conn.commit()
         return 1
