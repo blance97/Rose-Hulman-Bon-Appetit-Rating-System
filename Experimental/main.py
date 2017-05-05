@@ -3,7 +3,7 @@ import json
 from datetime import date
 import calendar
 import sys
-from flask import Flask, jsonify, current_app, request,abort
+from flask import Flask, jsonify, current_app, request,abort,redirect, url_for
 from bs4 import BeautifulSoup
 import logging
 import schedule
@@ -130,7 +130,6 @@ def register():
     email=request.form['email']
     password1=request.form['password']
     password2=request.form['cpassword']
-
     app.logger.debug("email: " + email + "\n" + "Username: " + username + "\nPassword1: " + str(password1) + " Password2: " + str(password2))
     if password1 != password2:
         abort(400, '<Passwords do not match>')
@@ -155,9 +154,28 @@ def moench():
 def getHours():
     return jsonify(DB.getHours())
 @app.route("/login")
-def login():
+def Renderlogin():
+    email = request.form['email']
+    password = request.form['password']
+    adminEmail = Config.get('Development', 'adminEmail')
+    adminPass = Config.get('Development', 'adminPass')
+    if(str(email) == str(adminEmail) and str(password) == str(adminPass)):
+        app.logger.debug("admin success")
+        return current_app.send_static_file('admin.html')
+    elif DB.checkUser(str(email),str(password)) != 1:
+        app.logger.debug("Its zero")
+        abort(401, "USERNAME DOES NOT EXIST")
+    app.logger.debug("not zero")    
     return current_app.send_static_file('rating.html')
-
+@app.route("/admin")
+def RenderAdmin():
+    return current_app.send_static_file('admin.html')
+@app.route("/getEmployees")
+def getEmployees():
+    return jsonify(DB.getEmployees())
+@app.route("/getCustomers")
+def getCustomers():
+    return jsonify(DB.getCustomers())
 
 def getMatch(mealOfDay):
     global breakfastData
