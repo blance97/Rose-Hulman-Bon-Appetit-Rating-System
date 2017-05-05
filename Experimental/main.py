@@ -130,7 +130,6 @@ def register():
     email=request.form['email']
     password1=request.form['password']
     password2=request.form['cpassword']
-
     app.logger.debug("email: " + email + "\n" + "Username: " + username + "\nPassword1: " + str(password1) + " Password2: " + str(password2))
     if password1 != password2:
         abort(400, '<Passwords do not match>')
@@ -154,10 +153,20 @@ def moench():
 @app.route("/getHours")
 def getHours():
     return jsonify(DB.getHours())
-@app.route("/login")
+@app.route("/login",methods=['GET','POST'])
 def login():
-    return current_app.send_static_file('rating.html')
-
+    email = request.form['email']
+    password = request.form['password']
+    adminEmail = Config.get('Development', 'adminEmail')
+    adminPass = Config.get('Development', 'adminPass')
+    if(str(email) == str(adminEmail) and str(password) == str(adminPass)):
+        app.logger.debug("admin success")
+        return current_app.send_static_file('admin.html')
+    elif DB.checkUser(str(email),str(password)) != 1:
+        app.logger.debug("Its zero")
+        abort(401, "USERNAME DOES NOT EXIST")
+    app.logger.debug("not zero")
+    return current_app.send_static_file('register.html')
 
 def getMatch(mealOfDay):
     global breakfastData

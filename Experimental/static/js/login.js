@@ -8,7 +8,7 @@ $(document).ready(function() {
             type: "POST",
             data: postData,
             success: function(data, textStatus, jqXHR) {
-              window.location = "rating.html"
+              //window.location = "rating.html"
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 $("#result").html("Username or Password was not valid")

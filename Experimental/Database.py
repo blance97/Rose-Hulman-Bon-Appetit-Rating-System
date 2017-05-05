@@ -43,3 +43,13 @@ class myDB(object):
         # retrieve the records from the database
         records = cur.fetchall()
         return records
+    def checkUser(self, email, password):
+        query = "SELECT username FROM Customer WHERE email = %s AND password = %s"
+        data = (email, password)
+        cur.execute(query, data)
+        conn.commit()
+        rowcount = cur.rowcount
+        if rowcount == 1: #email and password are valid
+            return 1
+        else:
+            return 0
