@@ -53,3 +53,13 @@ class myDB(object):
             return 1
         else:
             return 0
+    def getEmployees(self):
+        query = "SELECT employee.fname, employee.lname, employee.employeeid,worksat.cafename FROM (employee JOIN worksat ON ((employee.employeeid = worksat.employeeid)));"
+        cur.execute(query)
+        return cur.fetchall()
+    def getCustomers(self):
+        query = " SELECT customer.username, customer.email, customer.favorite FROM customer;"
+        cur.execute(query)
+        return cur.fetchall()
+    #def getFoodInfo() :
+        #call the top and bottom ranked foods here

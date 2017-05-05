@@ -3,7 +3,7 @@ import json
 from datetime import date
 import calendar
 import sys
-from flask import Flask, jsonify, current_app, request,abort
+from flask import Flask, jsonify, current_app, request,abort,redirect, url_for
 from bs4 import BeautifulSoup
 import logging
 import schedule
@@ -153,8 +153,8 @@ def moench():
 @app.route("/getHours")
 def getHours():
     return jsonify(DB.getHours())
-@app.route("/login",methods=['GET','POST'])
-def login():
+@app.route("/login")
+def Renderlogin():
     email = request.form['email']
     password = request.form['password']
     adminEmail = Config.get('Development', 'adminEmail')
@@ -165,8 +165,17 @@ def login():
     elif DB.checkUser(str(email),str(password)) != 1:
         app.logger.debug("Its zero")
         abort(401, "USERNAME DOES NOT EXIST")
-    app.logger.debug("not zero")
-    return current_app.send_static_file('register.html')
+    app.logger.debug("not zero")    
+    return current_app.send_static_file('rating.html')
+@app.route("/admin")
+def RenderAdmin():
+    return current_app.send_static_file('admin.html')
+@app.route("/getEmployees")
+def getEmployees():
+    return jsonify(DB.getEmployees())
+@app.route("/getCustomers")
+def getCustomers():
+    return jsonify(DB.getCustomers())
 
 def getMatch(mealOfDay):
     global breakfastData
