@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0" />
+    <title>WebName</title>
+    <!-- CSS  -->
+    <link href="images/favicon.ico" rel="shortcut icon">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="static/style/materialize.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+  <link href="static/style/login.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+</head>
+
+<body class="page-login">
+    <div class="center">
+        <div class="card bordered z-depth-2" style="margin:0% auto; max-width:1000px;">
+            <div class="card-header">
+                <i class="material-icons medium white-text">perm_identity</i>
+
+            </div>
+            <div class="card-content">
+                <form id="myForm" method="post" action="/signup">
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">supervisor_account</i>
+                            <input id="username" type="text"  name="username"  class="validate" required="" aria-required="true" maxlength="15">
+                            <label for="username">Enter Username</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">email</i>
+                            <input id="email" type="email" name="email" class="validate" required="" aria-required="true">
+                            <label for="email">Enter Email</label>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="input-field col s6">
+                            <i class="material-icons prefix">lock</i>
+                            <input id="password" type="password" name="password" class="validate" required="">
+                            <label for="password">Enter Password</label>
+                        </div>
+                        <div class="input-field col s6">
+                            <input id="cpassword" type="password" name="cpassword" class="validate" required="">
+                            <label for="cpassword">Confirm Password</label>
+                              <p id="result" class="red-text text-darken-2"></p>
+                        </div>
+                    </div>
+                    <br>
+                    <button type="submit" value="search" class="btn blue-grey right waves-effect waves-light white-text" style="width:100%">Create</button>
+                </form>
+            </div>
+            <div class="card-action clearfix">
+                <div class="row">
+                    <div class="col s12">
+                        <a href="/renderLogin" class="orange-text tooltipped" data-position="top" data-delay="50" data-tooltip="Login Here">Already Have an Account?</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--  Scripts-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    <script src="static/js/materialize.min.js"></script>
+    <script src="static/js/register.js"></script>
+
+    <span id="info_login"></span>
+</body>
+
+</html>
