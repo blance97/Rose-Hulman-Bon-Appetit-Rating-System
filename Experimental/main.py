@@ -134,9 +134,20 @@ def getComments():
 
 @app.route("/addComment", methods=['POST'])
 def addComment():
-    app.logger.debug("ADD COMMNET")
-    app.logger.debug(request.get_json())
-    return request.get_json()
+    comment = request.form['comment']
+    foodName = request.form['foodName']
+    userid = request.form['userID']
+    comment1 = json.dumps(comment)
+    app.logger.debug(comment1)
+    app.logger.debug("ADD COMMNET %s", str(comment))
+    msg = {
+        'userid': userid,
+        'comment': comment1,
+        'foodid': DB.getFoodID(foodName)[0][0],
+    }
+    app.logger.debug(msg)
+    DB.addComment(DB.getFoodID(foodName)[0][0], msg)
+    return current_app.send_static_file('rating.html')
     #
     # addComment()
 @app.route("/register")

@@ -3,6 +3,7 @@ $(function () {
     var label = labelArray1[1].split('%20').join(" ");
     document.title = label;
     $(commentLabel).html("Comment For: " + label);
+    $(foodName).val(label);
     $.get("/getComments/?=", function (data) {
         console.log("GET DATA");
         var commentsBox = "<ul class='commentList'>"
@@ -19,21 +20,21 @@ $(function () {
         }
     });
 
-    $("#addComment").click(function () {
-        alert("SEDNITN");
-        var obj = {
-            "UserID": 123,
-            "Comment": $("#comment").html(),
-            "Time": getTimeStamp()
-        };
-        $.ajax({
-            url: '/addComment',
-            type: 'POST',
-            contentType: 'application/json',
-            data: obj,
-            success: function (data) { alert(data.status); }
-        });
-    });
+    // $("#addComment").click(function () {
+    //     alert("SEDNITN");
+    //     var obj = {
+    //         "UserID": 123,
+    //         "Comment": $("#comment").html(),
+    //         "Time": getTimeStamp()
+    //     };
+    //     $.ajax({
+    //         url: '/addComment',
+    //         type: 'POST',
+    //         contentType: 'application/json',
+    //         data: obj,
+    //         success: function (data) { alert(data.status); }
+    //     });
+    // });
 
 });
 
