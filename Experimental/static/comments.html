@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="../static/style/comment.css">
+    <script src="../static/js/comment.js"></script>
+    <title>comments</title>
+</head>
+
+<body>
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">Best Meme</a>
+            </div>
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#" onclick="getMoench()">Home</a></li>
+                <li><a href="#1" onclick="getBreakfast()">Breakfast</a></li>
+                <li><a href="#2" onclick="getLunch()">Lunch</a></li>
+                <li><a href="#3" onclick="getDinner()">Dinner</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="detailBox">
+        <div class="titleBox">
+            <label id = "commentLabel">Comments For </label>
+            <button type="button" class="close" aria-hidden="true">&times;</button>
+        </div>
+        <div class="commentBox">
+
+            <p class="taskDescription">Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+        </div>
+        <div class="actionBox">
+        </div>
+            <form class="form-inline" action="/addComment" role="form">
+                <div class="form-group">
+                    <input class="form-control" type="text" placeholder="Your comments" />
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-default">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
