@@ -33,6 +33,53 @@ class myDB(object):
             cur.execute(query1, data1)
             conn.commit()
         return 1
+    def registerEmployee(self, eid, fname, lname, password,worksat):
+        query = "SELECT * FROM Employee WHERE employeeid = %s"
+        data = (eid,)
+        cur.execute(query, data)
+        conn.commit()
+        rowcount = cur.rowcount
+        if rowcount >= 1: # if eid already exists
+            return 0
+        else:
+            query1 = "INSERT INTO Employee (employeeid,fname,lname,password) Values (%s,%s,%s,%s)"
+            data1 = (eid,fname, lname, password)
+            cur.execute(query1, data1)
+            conn.commit()
+
+            query2 = "INSERT INTO WorksAt (employeeid,cafename) Values (%s,%s)"
+            data2 = (eid,worksat)
+            cur.execute(query2, data2)
+            conn.commit()
+        return 1
+    def deleteEmployee(self, eid):
+        query = "SELECT * FROM Employee WHERE employeeid = %s"
+        data = (eid,)
+        cur.execute(query, data)
+        conn.commit()
+        rowcount = cur.rowcount
+        if rowcount == 0:
+            return 0
+        else:
+            query1 = "DELETE FROM Employee WHERE employeeid = %s"
+            data1 = (eid,)
+            cur.execute(query1, data1)
+            conn.commit()
+        return 1
+    def deleteCustomer(self, username):
+        query = "SELECT * FROM Customer WHERE username = %s"
+        data = (username,)
+        cur.execute(query, data)
+        conn.commit()
+        rowcount = cur.rowcount
+        if rowcount == 0:
+            return 0
+        else:
+            query1 = "DELETE FROM Customer WHERE username = %s"
+            data1 = (username,)
+            cur.execute(query1, data1)
+            conn.commit()
+        return 1
     def getFoods(self, Meal):
         query = "SELECT * FROM FOOD"
         cur.execute(query)
@@ -53,6 +100,17 @@ class myDB(object):
             return 1
         else:
             return 0
+    def checkEmployee(self,eid,password):
+        query = "SELECT employeeid FROM Employee WHERE employeeid = %s AND password = %s"
+        data = (eid, password)
+        cur.execute(query, data)
+        conn.commit()
+        rowcount = cur.rowcount
+        if rowcount == 1: #eid and password are valid
+            return 1
+        else:
+            return 0
+
     def getEmployees(self):
         query = "SELECT employee.fname, employee.lname, employee.employeeid,worksat.cafename FROM (employee JOIN worksat ON ((employee.employeeid = worksat.employeeid)));"
         cur.execute(query)
@@ -63,3 +121,11 @@ class myDB(object):
         return cur.fetchall()
     #def getFoodInfo() :
         #call the top and bottom ranked foods here
+    def getTopFood(self):
+        query = "SELECT foodname, description, rating FRom food ORDER BY rating limit 20"
+        cur.execute(query)
+        return cur.fetchall()
+    def getBotFood(self):
+        query = "SELECT foodname, description, rating FRom food ORDER BY rating DESC limit 20"
+        cur.execute(query)
+        return cur.fetchall()

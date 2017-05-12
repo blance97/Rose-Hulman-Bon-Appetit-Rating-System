@@ -14,7 +14,16 @@
 </head>
 <body class="page-login">
   <div class="center">
-      <div class="card bordered z-depth-2" style="margin:0% auto; max-width:400px;">
+      <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <ul class="nav navbar-nav">
+                <li><a href="#" onclick="getEmployeeLogin()">Employee Login</a></li>
+                <li><a href="#1" onclick="getCustomerLogin()">Customer Login</a></li>
+            </ul>
+        </div>
+    </nav>
+    <br>
+      <div id="customerLogin" class="card bordered z-depth-2" style="margin:0% auto; max-width:400px;">
         <div class="card-header">
            <i class="material-icons medium white-text">perm_identity</i>
 
@@ -45,6 +54,30 @@
               <a href="/register" class="orange-text tooltipped" data-position="top" data-delay="50" data-tooltip="Register">Register</a>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div id="employeeLogin" class="card bordered z-depth-2" style="margin:0% auto; max-width:400px;">
+        <div class="card-header">
+           <i class="material-icons medium white-text">perm_identity</i>
+
+        </div>
+        <div class="card-content">
+          <form id="myForm" method="post" action="/employeeLogin">
+            <div class="input-field col s12">
+              <input id="employeeid" type="text" name="employeeid" class="validate" required="">
+              <label for="employeeid">Employee ID</label>
+            </div>
+            <div class="input-field col s12">
+              <input id="epassword" type="password" name="epassword" class="validate" required="">
+              <label for="epassword">Password</label>
+            </div>
+              <p id="result" class="red-text text-darken-2"></p>
+            <br>
+              <input type="checkbox" class="filled-in" id="filled-in-box"/>
+              <label for="filled-in-box">Remember me</label>
+              <button type="submit" class="btn blue-grey right waves-effect waves-light white-text">Login</button>
+          </form>
         </div>
       </div>
     </div>

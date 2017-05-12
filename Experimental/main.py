@@ -43,7 +43,6 @@ port = Config.get('Development', 'port')
 DB = myDB(databaseName,databaseUser,  databasePasswd, databaseHost, port)
 
 
-
 """ contants """
 FOODLIST = 30
 BREAKFAST = 31
@@ -117,7 +116,7 @@ def index():
     app.logger.debug(curUsers)
     app.logger.debug("\n")
     return current_app.send_static_file('index.html')
-@app.route("/ratings")
+@app.route("/rating")
 def renderRatings():
     return current_app.send_static_file('rating.html')
 @app.route("/register")
@@ -153,29 +152,87 @@ def moench():
 @app.route("/getHours")
 def getHours():
     return jsonify(DB.getHours())
-@app.route("/login")
+@app.route("/login",  methods=['GET','POST'])
 def Renderlogin():
+    app.logger.debug("in the login method")
     email = request.form['email']
     password = request.form['password']
     adminEmail = Config.get('Development', 'adminEmail')
     adminPass = Config.get('Development', 'adminPass')
-    if(str(email) == str(adminEmail) and str(password) == str(adminPass)):
+    if(email == adminEmail and password == adminPass):
         app.logger.debug("admin success")
         return current_app.send_static_file('admin.html')
-    elif DB.checkUser(str(email),str(password)) != 1:
-        app.logger.debug("Its zero")
+    if DB.checkUser(str(email),str(password)) != 1:
+        app.logger.debug("username/pass dne")
         abort(401, "USERNAME DOES NOT EXIST")
     app.logger.debug("not zero")    
     return current_app.send_static_file('rating.html')
+@app.route("/employeeLogin",  methods=['GET','POST'])
+def employeeLogin():
+    app.logger.debug("in the login method")
+    eid = request.form['employeeid']
+    password = request.form['epassword']
+    if DB.checkEmployee(str(eid),str(password)) != 1:
+        app.logger.debug("employee id/pass dne")
+        abort(401, "employee id/pass DOES NOT EXIST")
+    app.logger.debug("not zero")    
+    return current_app.send_static_file('rating.html')
+
 @app.route("/admin")
 def RenderAdmin():
     return current_app.send_static_file('admin.html')
+
+@app.route("/getTopFood")
+def getTopFood():
+    return jsonify(DB.getTopFood())
+
+@app.route("/getBotFood")
+def getBotFood():
+    return jsonify(DB.getBotFood())
+
 @app.route("/getEmployees")
 def getEmployees():
     return jsonify(DB.getEmployees())
+
 @app.route("/getCustomers")
 def getCustomers():
     return jsonify(DB.getCustomers())
+
+@app.route("/admin/addEmployee", methods=['GET','POST'])
+def addEmployee(): 
+    app.logger.debug("calling addEmployee")
+    eid=request.form['employeeid']
+    fname=request.form['fname']
+    lname=request.form['lname']
+    work=request.form['worksat']
+    password1=request.form['password']
+    password2=request.form['password2']
+    app.logger.debug("employeeid: " + eid + "\n" + "fname: " + fname + "\nlname: " + str(lname) + "\nPassword: " + str(password1) + "\nPassword2: " + str(password2))
+    if password1 != password2:
+        abort(400, '<Passwords do not match>')
+    if DB.registerEmployee(str(eid), str(fname), str(lname), str(password1), str(work)) != 1:
+        app.logger.debug("employee id already there")
+        abort(401, "EMPLOYEE ALREADY EXISTS")
+    app.logger.debug("added successfully")
+    return current_app.redirect("/admin")
+
+@app.route("/admin/deleteEmployee", methods=['GET','POST'])
+def deleteEmployee():
+    eid=request.form['eid']
+    if DB.deleteEmployee(str(eid)) != 1:
+        app.logger.debug("there is no person with that id")
+        abort(401, "EMPLOYEE DOES NOT EXIST")
+    app.logger.debug("deleted successfully")
+    return current_app.send_static_file('admin.html')
+
+@app.route("/admin/deleteCustomer", methods=['GET','POST'])
+def deleteCustomer():
+    username=request.form['username']
+    if DB.deleteCustomer(str(username)) != 1:
+        app.logger.debug("there is no person with that id")
+        abort(401, "CUSTOMER DOES NOT EXIST")
+    app.logger.debug("deleted successfully")
+    return current_app.send_static_file('admin.html')
 
 def getMatch(mealOfDay):
     global breakfastData

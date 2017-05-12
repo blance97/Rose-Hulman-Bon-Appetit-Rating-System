@@ -5,8 +5,8 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="static/style/common.css">
-    <script src="static/js/admin.js"></script>
+    <link rel="stylesheet" type="text/css" href="../static/style/common.css">
+    <script src="../static/js/admin.js"></script>
 </head>
 
 <body>
@@ -16,22 +16,78 @@
                 <a class="navbar-brand" href="#">Best Meme</a>
             </div>
             <ul class="nav navbar-nav">
-                <li class="active"><a href="#" onclick="getEmployees()">Employees</a></li>
+                <li><a href="#" onclick="getEmployees()">Employees</a></li>
                 <li><a href="#1" onclick="getCustomers()">Customers</a></li>
-                <li><a href="#2" onclick="getFoodInfo()">Food</a></li>
+                <li><a href="#2" onclick="getTopFood()">Food</a></li>
             </ul>
         </div>
     </nav>
-        <div id="adminaOptions">
-            <ul class="nav navbar-nav">
-                <li class="active"><a href="#" onclick="addEmployees()">Add</a></li>
-                <li><a href="#1" onclick="deleteCustomers()">Delete</a></li>
-            </ul>
-        </div>
+    <div class="navbar" id="employeeOptions">
+        <ul class="nav navbar-nav">
+            <li><a href="#1" onclick="getEmployees()">Employee List</a></li>
+            <li><a href="#2" onclick="addEmployees()">Add</a></li>
+            <li><a href="#3" onclick="deleteEmployees()">Delete</a></li>
+        </ul>
+    </div>
+    <div class="navbar" id="customerOptions">
+        <ul class="nav navbar-nav">
+            <li><a href="#4" onclick="getCustomers()">Customer List</a></li>
+            <li><a href="#5" onclick="deleteCustomer()">Delete</a></li>
+        </ul>
+    </div>
+    <div class="navbar" id="foodOptions">
+        <ul class="nav navbar-nav">
+            <li><a href="#4" onclick="getTopFood()">Top Foods</a></li>
+            <li><a href="#5" onclick="getBotFood()">Bottom Foods</a></li>
+        </ul>
+    </div>
+    <br>
+    <div id="adminDisplay">
         <div id="adminTable">
-            <table>
-            </table>
         </div>
+        <div id="addEmps">
+              <br>
+              <form id="employeeAdd" method="post" action="/admin/addEmployee">
+                  <label for="employeeid">Employee Id</label>
+                  <input id="employeeid" type="text" name="employeeid" class="validate" required="" aria-required="true" maxlength="8" minlength="8">
+                  <br>
+                  <label for="fname">First Name</label>
+                  <input id="fname" type="text" name="fname" class="validate" required="" aria-required="true">
+                  <label for="lname">Last Name</label>
+                  <input id="lname" type="text" name="lname" class="validate" required="" aria-required="true">
+                  <br>
+                  <label for="worksat">Select Cafe:</label>
+                  <br><input id="worksat" type="radio" required="" name="worksat" value="Union Cafe">Union Cafe
+                  <br><input id="worksat" type="radio" required="" name="worksat" value="Logans">Logans
+                  <br><input id="worksat" type="radio" required="" name="worksat" value="Moench Cafe">Moench Cafe
+                  <br>
+                  <label for="password">Password</label>
+                  <input id="password" type="password" name="password" class="validate" required="" maxlength="32" minlength="8">
+                  <br>
+                  <label for="password">Re-enter Password</label>
+                  <input id="password" type="password" name="password2" class="validate" required="" maxlength="32" minlength="8">
+                  <br>
+                  <button type="submit" class="btn blue-grey right waves-effect waves-light white-text">Add Employee</button>
+              </form>
+        </div>
+        <div id="deleteEmps">
+            <br>
+            <form id="employeeDelete" method="post" action="/admin/deleteEmployee">
+                <label for="eid">Employee Id</label>
+                <input id="eid" type="text" name="eid" class="validate" required="" aria-required="true" maxlength="8" minlength="8">
+                <br><button type="submit" class="btn blue-grey right waves-effect waves-light white-text">Delete Employee</button>
+            </form>
+        </div>
+        <div id="deleteCust">
+            <br>
+            <form id="customerDelete" method="post" action="/admin/deleteCustomer">
+                <label for="username">Username</label>
+                <input id="username" type="text" name="username" class="validate" required="" aria-required="true">
+                <br><button type="submit" class="btn blue-grey right waves-effect waves-light white-text">Delete Customer</button>
+            </form>
+        </div>
+
+    </div>
 
 </body>
 
