@@ -1,7 +1,8 @@
 import psycopg2
 import sys
-
-
+from datetime import datetime
+from flask import current_app
+import json
 class myDB(object):
 
     def __init__(self, databaseName, user, password, host, port):
@@ -16,23 +17,37 @@ class myDB(object):
         cur.execute(query, data)
         conn.commit()
 
+        query2 = "INSERT INTO rating (foodid, menuid, rating, comment, time) Values (%s,%s,%s,%s,%s) ON CONFLICT(foodid, time) DO NOTHING"
+        data2 = (FoodID, 2, 0, "", "5/12/2017")
+        cur.execute(query2, data2)
+        conn.commit()
     def getComments(self, FoodID):
         query = "SELECT comment FROM RATING WHERE foodid = %s"
         data = (FoodID,)
         cur.execute(query, data)
         return cur.fetchall()
     
-    def addComment(self, FoodID, Comment): # make stored procedure
-        query = "SELECT comment FROM rating WHERE foodid= %s"
-        data = (FoodID,)
+    def getFoodID(self, foodName):
+        query = "SELECT foodid FROM food WHERE foodname = %s"
+        data = (foodName,)
         cur.execute(query, data)
+        return cur.fetchall()
+    
+    def addComment(self, foodID, Comment): # make stored procedure
+        oldComment = self.getComments(foodID)
+        current_app.logger.debug("OLD COMMENTS: " + str(oldComment))
+        if(len(oldComment) == 0):
+            current_app.logger.debug("FRIST TIME")
+            oldComment = []      
+        oldComment.append(Comment)
+        st = json.dumps(oldComment)
+        
+        query2 = "UPDATE rating SET comment = %s WHERE foodid = %s"
+        data2 = (st,foodID)
+        current_app.logger.debug("DATA: " + str(st) + " foodID: " + str(foodID))
+        cur.execute(query2, data2)
         conn.commit()
-        origComment = cur.fetchall()
-        addedComment = origComment + comment
-        query1 = "UPDATE comment WHERE foodid = %s SET comment = %s"
-        data1 = (FoodID,Comment)
-        cur.execute(query1, data1)
-        conn.commit()
+
     def registerUser(self, email, Username, Password):
         #Check uniqueness
         query = "SELECT username FROM Customer WHERE username = %s"
@@ -45,8 +60,8 @@ class myDB(object):
             return 0
         else:
             print "INSERTING: Email: " + email + " password: " + Password + " Username: " + Username
-            query1 = "INSERT INTO Customer ( email,favorite, password, Username) Values (%s,%s,%s,%s)"
-            data1 = (email,5547887, Password, Username)
+            query1 = "INSERT INTO Customer ( email, password, Username) Values (%s,%s,%s)"
+            data1 = (email, Password, Username)
             cur.execute(query1, data1)
             conn.commit()
         return 1
@@ -56,7 +71,7 @@ class myDB(object):
         cur.execute(query, data)
         conn.commit()
         rowcount = cur.rowcount
-        if rowcount >= 1: # if eid already exists
+        if rowcount >= 1: # if eid already exists                   
             return 0
         else:
             query1 = "INSERT INTO Employee (employeeid,fname,lname,password) Values (%s,%s,%s,%s)"
