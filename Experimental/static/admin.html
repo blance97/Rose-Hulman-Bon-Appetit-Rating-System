@@ -6,7 +6,7 @@
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <link rel="stylesheet" type="text/css" href="static/style/common.css">
-    <script src="static/js/script.js"></script>
+    <script src="static/js/admin.js"></script>
 </head>
 
 <body>
@@ -16,17 +16,19 @@
                 <a class="navbar-brand" href="#">Best Meme</a>
             </div>
             <ul class="nav navbar-nav">
-                <li class="active"><a href="#" onclick="getMoench()">Home</a></li>
-                <li><a href="#1" onclick="getBreakfast()">Breakfast</a></li>
-                <li><a href="#2" onclick="getLunch()">Lunch</a></li>
-                <li><a href="#3" onclick="getDinner()">Dinner</a></li>
+                <li class="active"><a href="#" onclick="getEmployees()">Employees</a></li>
+                <li><a href="#1" onclick="getCustomers()">Customers</a></li>
+                <li><a href="#2" onclick="getFoodInfo()">Food</a></li>
             </ul>
         </div>
     </nav>
-    
-
-        <div id="getHours"></div>
-        <div id="here_table">
+        <div id="adminaOptions">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#" onclick="addEmployees()">Add</a></li>
+                <li><a href="#1" onclick="deleteCustomers()">Delete</a></li>
+            </ul>
+        </div>
+        <div id="adminTable">
             <table>
             </table>
         </div>

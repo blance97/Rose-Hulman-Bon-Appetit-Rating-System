@@ -3,7 +3,7 @@ import json
 from datetime import date
 import calendar
 import sys
-from flask import Flask, jsonify, current_app, request,abort
+from flask import Flask, jsonify, current_app, request,abort,redirect, url_for
 from bs4 import BeautifulSoup
 import logging
 import schedule
@@ -120,6 +120,26 @@ def index():
 @app.route("/ratings")
 def renderRatings():
     return current_app.send_static_file('rating.html')
+@app.route("/ratings/")
+def comments():
+    comment = request.args.get('food')
+    if request.method == 'GET':
+        #app.logger.debug(request.url)
+        json = request.args.to_dict()
+        app.logger.debug("Comment: " + str(json))
+    return current_app.send_static_file('comments.html')
+
+@app.route("/getComments/")
+def getCustomers():
+    return jsonify(DB.getComments(5547887))
+
+@app.route("/addComment", methods=['POST'])
+def addComment():
+    app.logger.debug("ADD COMMNET")
+    app.logger.debug(request.get_json())
+    return request.get_json()
+    #
+    # addComment()
 @app.route("/register")
 def renderRegister():
     return current_app.send_static_file('register.html')
@@ -130,7 +150,6 @@ def register():
     email=request.form['email']
     password1=request.form['password']
     password2=request.form['cpassword']
-
     app.logger.debug("email: " + email + "\n" + "Username: " + username + "\nPassword1: " + str(password1) + " Password2: " + str(password2))
     if password1 != password2:
         abort(400, '<Passwords do not match>')
@@ -155,9 +174,28 @@ def moench():
 def getHours():
     return jsonify(DB.getHours())
 @app.route("/login")
-def login():
+def Renderlogin():
+    email = request.form['email']
+    password = request.form['password']
+    adminEmail = Config.get('Development', 'adminEmail')
+    adminPass = Config.get('Development', 'adminPass')
+    if(str(email) == str(adminEmail) and str(password) == str(adminPass)):
+        app.logger.debug("admin success")
+        return current_app.send_static_file('admin.html')
+    elif DB.checkUser(str(email),str(password)) != 1:
+        app.logger.debug("Its zero")
+        abort(401, "USERNAME DOES NOT EXIST")
+    app.logger.debug("not zero")    
     return current_app.send_static_file('rating.html')
+@app.route("/admin")
+def RenderAdmin():
+    return current_app.send_static_file('admin.html')
+@app.route("/getEmployees")
+def getEmployees():
+    return jsonify(DB.getEmployees())
 
+
+    
 
 def getMatch(mealOfDay):
     global breakfastData
@@ -174,33 +212,124 @@ def getMatch(mealOfDay):
         for x in range(len(data)):
             for y in range(len(breakfastData['stations'][0]['items'])):
                 if(breakfastData['stations'][0]['items'][y] == data.keys()[x]):
-                    #app.logger.debug(int(data.keys()[x]))
-                    DB.insertFood(int(data.keys()[x]), 't', 't', 'f', 'f',str(data[data.keys()[x]]['label']), 'good', 2.3)
-                    toReturn.append(str(data.keys()[x] + " = " + str(data[data.keys()[x]]['label'])))
+                    for i in range (len(data[data.keys()[x]]['cor_icon'])):
+                        vegetarian = 'f'
+                        vegan = 'f'
+                        glutenFree = 't'
+                        Kosher = 'f'
+                        if (data[data.keys()[x]]['cor_icon'].keys()[i] == "1"):
+                            vegetarian = 't'
+                        elif(data[data.keys()[x]]['cor_icon'].keys()[i] == "4"):
+                            vegan = 't'
+                        elif(data[data.keys()[x]]['cor_icon'].keys()[i] == "9"):
+                            glutenFree = 't'
+                        else:
+                             Kosher = 'f'
+                    DB.insertFood(int(data.keys()[x]), vegetarian, vegan, glutenFree, Kosher,str(data[data.keys()[x]]['label']), 'good', 2.3)
+                    msg = {
+                        'vegetarian': vegetarian,
+                        'vegan': vegan,
+                        'glutenfree': glutenFree,
+                        'Kosher': Kosher,
+                        'FoodName': str(data[data.keys()[x]]['label']),
+                        'Descrip': 'good',#change
+                        'Rating': 2.3 #change
+                    }
+                    toReturn.append(msg)
         return toReturn 
     elif(mealOfDay == MOENCH):
         print("\n MOENCH: \n")
         for x in range(len(data)):
             for y in range(len(moenchData['stations'][0]['items'])):
                 if(moenchData['stations'][0]['items'][y] == data.keys()[x]):
-                    DB.insertFood(int(data.keys()[x]), 't', 't', 'f', 'f',str(data[data.keys()[x]]['label']), 'good', 2.3)
-                    toReturn.append(str(data.keys()[x] + " = " + str(data[data.keys()[x]]['label'])))
+                    vegetarian = 'f'
+                    vegan = 'f'
+                    glutenFree = 't'
+                    Kosher = 'f'
+                    for i in range (len(data[data.keys()[x]]['cor_icon'])):
+                        if (data[data.keys()[x]]['cor_icon'].keys()[i] == "1"):
+                            vegetarian = 't'
+                        elif(data[data.keys()[x]]['cor_icon'].keys()[i] == "4"):
+                            vegan = 't'
+                        elif(data[data.keys()[x]]['cor_icon'].keys()[i] == "9"):
+                            glutenFree = 't'
+                        else:
+                             Kosher = 'f'
+                    DB.insertFood(int(data.keys()[x]), vegetarian, vegan, glutenFree, Kosher,str(data[data.keys()[x]]['label']), 'good', 2.3)
+                    msg = {
+                        'vegetarian': vegetarian,
+                        'vegan': vegan,
+                        'glutenFree': glutenFree,
+                        'Kosher': Kosher,
+                        'FoodName': str(data[data.keys()[x]]['label']),
+                        'Descrip': 'good',#change
+                        'Rating': 2.3 #change
+                    }
+                    toReturn.append(msg)
         return toReturn 
     elif(mealOfDay == LUNCH):
         print("\n LUNCH: \n")
         for x in range(len(data)):
             for y in range(len(lunchData['stations'][0]['items'])):
                 if(lunchData['stations'][0]['items'][y] == data.keys()[x]):
-                    DB.insertFood(int(data.keys()[x]), 't', 't', 'f', 'f',str(data[data.keys()[x]]['label']), 'good', 2.3)
-                    toReturn.append(str(data.keys()[x] + " = " + str(data[data.keys()[x]]['label'])))
+                    vegetarian = 'f'
+                    vegan = 'f'
+                    glutenFree = 't'
+                    Kosher = 'f'
+                    for i in range (len(data[data.keys()[x]]['cor_icon'])):
+                        if (data[data.keys()[x]]['cor_icon'].keys()[i] == "1"):
+                            vegetarian = 't'
+                        elif(data[data.keys()[x]]['cor_icon'].keys()[i] == "4"):
+                            vegan = 't'
+                        elif(data[data.keys()[x]]['cor_icon'].keys()[i] == "9"):
+                            glutenFree = 't'
+                        else:
+                             Kosher = 'f'
+                    DB.insertFood(int(data.keys()[x]), vegetarian, vegan, glutenFree, Kosher,str(data[data.keys()[x]]['label']), 'good', 2.3)
+                    msg = {
+                        'vegetarian': vegetarian,
+                        'vegan': vegan,
+                        'glutenFree': glutenFree,
+                        'Kosher': Kosher,
+                        'FoodName': str(data[data.keys()[x]]['label']),
+                        'Descrip': 'good',#change
+                        'Rating': 2.3 #change
+                    }
+                    toReturn.append(msg)
         return toReturn 
     elif(mealOfDay == DINNER):
         print("\n DINNER: \n")
         for x in range(len(data)):
             for y in range(len(dinnerData['stations'][0]['items'])):
                 if(dinnerData['stations'][0]['items'][y] == data.keys()[x]):
-                    DB.insertFood(int(data.keys()[x]), 't', 't', 'f', 'f',str(data[data.keys()[x]]['label']), 'good', 2.3)  
-                    toReturn.append(str(data.keys()[x] + " = " + str(data[data.keys()[x]]['label'])))
+                    app.logger.debug(len(data[data.keys()[x]]['cor_icon']))
+                    vegetarian = 'f'
+                    vegan = 'f'
+                    glutenFree = 'f'
+                    Kosher = 'f'
+                    for i in range (len(data[data.keys()[x]]['cor_icon'])):
+                        print("vegetarian")
+                        if (data[data.keys()[x]]['cor_icon'].keys()[i] == "1"):
+                            vegetarian = 't'
+                            app.logger.debug("vegetarian")
+                        elif(data[data.keys()[x]]['cor_icon'].keys()[i] == "4"):
+                            vegan = 't'
+                        elif(data[data.keys()[x]]['cor_icon'].keys()[i] == "9"):
+                            glutenFree = 't'
+                        else:
+                             Kosher = 'f'
+                    app.logger.debug(vegetarian)
+                    DB.insertFood(int(data.keys()[x]), vegetarian, vegan, glutenFree, Kosher,str(data[data.keys()[x]]['label']), 'good', 2.3)
+                    msg = {
+                        'vegetarian': vegetarian,
+                        'vegan': vegan,
+                        'glutenFree': glutenFree,
+                        'Kosher': Kosher,
+                        'FoodName': str(data[data.keys()[x]]['label']),
+                        'Descrip': 'good',#change
+                        'Rating': 2.3 #change
+                    }
+                    toReturn.append(msg)
         return toReturn 
 if __name__ == "__main__":
     setup()

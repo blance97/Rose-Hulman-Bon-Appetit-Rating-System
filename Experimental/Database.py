@@ -16,6 +16,23 @@ class myDB(object):
         cur.execute(query, data)
         conn.commit()
 
+    def getComments(self, FoodID):
+        query = "SELECT comment FROM RATING WHERE foodid = %s"
+        data = (FoodID,)
+        cur.execute(query, data)
+        return cur.fetchall()
+    
+    def addComment(self, FoodID, Comment): # make stored procedure
+        query = "SELECT comment FROM rating WHERE foodid= %s"
+        data = (FoodID,)
+        cur.execute(query, data)
+        conn.commit()
+        origComment = cur.fetchall()
+        addedComment = origComment + comment
+        query1 = "UPDATE comment WHERE foodid = %s SET comment = %s"
+        data1 = (FoodID,Comment)
+        cur.execute(query1, data1)
+        conn.commit()
     def registerUser(self, email, Username, Password):
         #Check uniqueness
         query = "SELECT username FROM Customer WHERE username = %s"
@@ -43,3 +60,24 @@ class myDB(object):
         # retrieve the records from the database
         records = cur.fetchall()
         return records
+    def checkUser(self, email, password):
+        query = "SELECT username FROM Customer WHERE email = %s AND password = %s"
+        data = (email, password)
+        cur.execute(query, data)
+        conn.commit()
+        rowcount = cur.rowcount
+        if rowcount == 1: #email and password are valid
+            return 1
+        else:
+            return 0
+    def getEmployees(self):
+        query = "SELECT employee.fname, employee.lname, employee.employeeid,worksat.cafename FROM (employee JOIN worksat ON ((employee.employeeid = worksat.employeeid)));"
+        cur.execute(query)
+        return cur.fetchall()
+    def getCustomers(self):
+        query = "SELECT customer.username, customer.email, customer.favorite FROM customer;"
+        cur.execute(query)
+        return cur.fetchall()
+    
+    #def getFoodInfo() :
+        #call the top and bottom ranked foods here
