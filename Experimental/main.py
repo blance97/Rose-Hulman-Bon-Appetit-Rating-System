@@ -3,13 +3,14 @@ import json
 from datetime import date
 import calendar
 import sys
-from flask import Flask, jsonify, current_app, request,abort,redirect, url_for
+from flask import Flask, jsonify, current_app, request,abort,redirect, url_for, make_response
 from bs4 import BeautifulSoup
 import logging
 import schedule
 import time
 import psycopg2
 import ConfigParser
+from uuid import uuid4
 from Database import myDB
 
 """ Initial setup of imports and stuff"""
@@ -73,6 +74,9 @@ try:
 except:
     print("getting data failed.  Either the html structure changed or day/meal isn't correct")
 
+#Generate session token for users when they log in.  Need to check for uniqueness
+def generate_session_id():
+    return uuid4()
 
 #returns first and end character for certain food meals
 def findStartAndEnd(mealOfDay):
@@ -163,11 +167,9 @@ def register():
     app.logger.debug("email: " + email + "\n" + "Username: " + username + "\nPassword1: " + str(password1) + " Password2: " + str(password2))
     if password1 != password2:
         abort(400, '<Passwords do not match>')
-    if DB.registerUser(str(email), str(username), str(password1)) != 1:
-        app.logger.debug("ITS ZERO!")
-        abort(401, "USERNAME ALREADY EXISTS")
-    app.logger.debug("NOT ZERO!")
-    return current_app.send_static_file('index.html')
+    else:
+        DB.registerUser(str(email), str(username), str(password1))
+        return current_app.send_static_file('index.html')
 @app.route("/getBreakfast")
 def breakfast():
     return jsonify(getMatch(BREAKFAST))
@@ -183,6 +185,16 @@ def moench():
 @app.route("/getHours")
 def getHours():
     return jsonify(DB.getHours())
+
+@app.route("/getUser")
+def getUsername():
+    sid = request.cookies.get('SessionID')
+    app.logger.debug("SID: " + str(sid))
+    if(sid != 0):
+        return jsonify(DB.getUser(sid))
+    else:
+        return current_app.send_static_file('index.html')
+
 @app.route("/login",  methods=['GET','POST'])
 def Renderlogin():
     app.logger.debug("in the login method")
@@ -196,8 +208,21 @@ def Renderlogin():
     if DB.checkUser(str(email),str(password)) != 1:
         app.logger.debug("username/pass dne")
         abort(401, "USERNAME DOES NOT EXIST")
-    app.logger.debug("not zero")    
-    return current_app.send_static_file('rating.html')
+    app.logger.debug("not zero")
+    sid = generate_session_id()
+    DB.updateSessionTokenCustomer(True, str(sid), email) 
+    resp = make_response(redirect('/rating'))
+    resp.set_cookie('SessionID', str(sid),max_age=900)
+    return resp
+
+@app.route("/logout",  methods=['GET','POST'])
+def logout():
+    sid = request.cookies.get('SessionID')
+    DB.updateSessionTokenCustomer(False, sid, "N/A") 
+    resp = make_response()
+    resp.set_cookie('SessionID', "0")
+    return resp
+
 @app.route("/employeeLogin",  methods=['GET','POST'])
 def employeeLogin():
     app.logger.debug("in the login method")
@@ -293,7 +318,7 @@ def getMatch(mealOfDay):
                             glutenFree = 't'
                         else:
                              Kosher = 'f'
-                    DB.insertFood(int(data.keys()[x]), vegetarian, vegan, glutenFree, Kosher,str(data[data.keys()[x]]['label']), 'good', 2.3)
+                    DB.insertFood(int(data.keys()[x]), vegetarian, vegan, glutenFree, Kosher,str(data[data.keys()[x]]['label']), 'good', 0,0)
                     msg = {
                         'vegetarian': vegetarian,
                         'vegan': vegan,
@@ -323,7 +348,7 @@ def getMatch(mealOfDay):
                             glutenFree = 't'
                         else:
                              Kosher = 'f'
-                    DB.insertFood(int(data.keys()[x]), vegetarian, vegan, glutenFree, Kosher,str(data[data.keys()[x]]['label']), 'good', 2.3)
+                    DB.insertFood(int(data.keys()[x]), vegetarian, vegan, glutenFree, Kosher,str(data[data.keys()[x]]['label']), 'good', 0,1)
                     msg = {
                         'vegetarian': vegetarian,
                         'vegan': vegan,
@@ -353,7 +378,7 @@ def getMatch(mealOfDay):
                             glutenFree = 't'
                         else:
                              Kosher = 'f'
-                    DB.insertFood(int(data.keys()[x]), vegetarian, vegan, glutenFree, Kosher,str(data[data.keys()[x]]['label']), 'good', 2.3)
+                    DB.insertFood(int(data.keys()[x]), vegetarian, vegan, glutenFree, Kosher,str(data[data.keys()[x]]['label']), 'good',0, 1)
                     msg = {
                         'vegetarian': vegetarian,
                         'vegan': vegan,
@@ -370,7 +395,6 @@ def getMatch(mealOfDay):
         for x in range(len(data)):
             for y in range(len(dinnerData['stations'][0]['items'])):
                 if(dinnerData['stations'][0]['items'][y] == data.keys()[x]):
-                    app.logger.debug(len(data[data.keys()[x]]['cor_icon']))
                     vegetarian = 'f'
                     vegan = 'f'
                     glutenFree = 'f'
@@ -379,15 +403,13 @@ def getMatch(mealOfDay):
                         print("vegetarian")
                         if (data[data.keys()[x]]['cor_icon'].keys()[i] == "1"):
                             vegetarian = 't'
-                            app.logger.debug("vegetarian")
                         elif(data[data.keys()[x]]['cor_icon'].keys()[i] == "4"):
                             vegan = 't'
                         elif(data[data.keys()[x]]['cor_icon'].keys()[i] == "9"):
                             glutenFree = 't'
                         else:
                              Kosher = 'f'
-                    app.logger.debug(vegetarian)
-                    DB.insertFood(int(data.keys()[x]), vegetarian, vegan, glutenFree, Kosher,str(data[data.keys()[x]]['label']), 'good', 2.3)
+                    DB.insertFood(int(data.keys()[x]), vegetarian, vegan, glutenFree, Kosher,str(data[data.keys()[x]]['label']), 'good',0, 2)
                     msg = {
                         'vegetarian': vegetarian,
                         'vegan': vegan,

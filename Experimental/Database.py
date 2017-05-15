@@ -10,16 +10,13 @@ class myDB(object):
         global cur
         conn = psycopg2.connect(database=databaseName, user=user, password=password, host=host, port=port)
         cur = conn.cursor()
+        self.insertFoodsFunctions()
+        self.registerUserFunction()
 
-    def insertFood(self, FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, FoodDescription, AvgRating):
-        query = "INSERT INTO Food ( FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, Description, Rating) Values (%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT(FoodID) DO NOTHING"
-        data = (FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, FoodDescription, AvgRating)
+    def insertFood(self, FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, FoodDescription, AvgRating, meal):
+        query = "SELECT insertFoods(%s, %s, %s,%s,%s,%s, %s, %s, %s)"
+        data = (FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, FoodDescription, AvgRating, meal)
         cur.execute(query, data)
-        conn.commit()
-
-        query2 = "INSERT INTO rating (foodid, menuid, rating, comment, time) Values (%s,%s,%s,%s,%s) ON CONFLICT(foodid, time) DO NOTHING"
-        data2 = (FoodID, 2, 0, "", "5/12/2017")
-        cur.execute(query2, data2)
         conn.commit()
     def getComments(self, FoodID):
         query = "SELECT comment FROM RATING WHERE foodid = %s"
@@ -48,23 +45,15 @@ class myDB(object):
         cur.execute(query2, data2)
         conn.commit()
 
-    def registerUser(self, email, Username, Password):
-        #Check uniqueness
-        query = "SELECT username FROM Customer WHERE username = %s"
-        data = (Username,)
-        cur.execute(query, data)
-        conn.commit()
-        rowcount = cur.rowcount
-        print str(rowcount)
-        if rowcount >= 1: # if username already exists
-            return 0
-        else:
-            print "INSERTING: Email: " + email + " password: " + Password + " Username: " + Username
-            query1 = "INSERT INTO Customer ( email, password, Username) Values (%s,%s,%s)"
-            data1 = (email, Password, Username)
-            cur.execute(query1, data1)
+    def registerUser(self, email, username, password):
+        try:
+            query = "SELECT registerUser(%s,%s,%s);"
+            data = (email, username, password)
+            cur.execute(query, data)
             conn.commit()
-        return 1
+        except:
+            conn.rollback()
+
     def registerEmployee(self, eid, fname, lname, password,worksat):
         query = "SELECT * FROM Employee WHERE employeeid = %s"
         data = (eid,)
@@ -84,6 +73,7 @@ class myDB(object):
             cur.execute(query2, data2)
             conn.commit()
         return 1
+
     def deleteEmployee(self, eid):
         query = "SELECT * FROM Employee WHERE employeeid = %s"
         data = (eid,)
@@ -132,6 +122,26 @@ class myDB(object):
             return 1
         else:
             return 0
+            
+    def getUser(self, sid):
+        query = "SELECT username FROM customer WHERE sessiontoken = %s"
+        data = (sid,)
+        cur.execute(query, data)
+        return cur.fetchall()
+
+    def updateSessionTokenCustomer(self,login,sessionToken, email):
+        if(login == True):
+            query = "UPDATE customer SET sessionToken = %s WHERE email = %s"
+            data = (sessionToken,email)
+            cur.execute(query, data)
+            conn.commit()
+        else:
+            query = "UPDATE customer SET sessionToken = 0 WHERE sessiontoken = %s"
+            data = (sessionToken,)
+            cur.execute(query, data)
+            conn.commit()
+
+
     def checkEmployee(self,eid,password):
         query = "SELECT employeeid FROM Employee WHERE employeeid = %s AND password = %s"
         data = (eid, password)
@@ -162,3 +172,45 @@ class myDB(object):
         query = "SELECT foodname, description, rating FRom food ORDER BY rating DESC limit 20"
         cur.execute(query)
         return cur.fetchall()
+    def insertFoodsFunctions(self):
+        query = """CREATE OR REPLACE FUNCTION insertFoods(fid integer, Vegetarian boolean,GlutenFree boolean, Vegan boolean, Kosher boolean, FoodName TEXT, Description text, Rating integer, meal INTEGER)
+                    RETURNS integer AS $$
+	                declare
+	                getmenuID integer;
+                    BEGIN
+                        INSERT INTO menu (meal, date) Values (meal, CURRENT_TIMESTAMP);
+                        SELECT MAX(MenuID) into getmenuID FROM menu;
+    
+                        INSERT INTO Food ( FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, Description, Rating) Values (fid,Vegetarian,Vegan, GlutenFree, Kosher,FoodName,Description,Rating) ON CONFLICT DO NOTHING;
+
+                        INSERT INTO rating ( FoodID, time, menuid) Values (fid, CURRENT_TIMESTAMP ,getmenuID) ON CONFLICT DO NOTHING;
+
+                        RETURN 1;
+                        END;
+                $$ LANGUAGE plpgsql;"""
+        cur.execute(query)
+        conn.commit()
+
+    def registerUserFunction(self):
+        #Check uniqueness
+        query = """CREATE OR REPLACE FUNCTION registerUser (
+            inputEmail TEXT,
+            Uname TEXT,
+            Pword TEXT
+        )
+        RETURNS BOOLEAN AS $$
+        declare
+	        usrExist integer;
+        BEGIN
+            SELECT count(*) into usrExist FROM Customer WHERE username = Uname;
+            IF usrExist = 0 THEN
+                INSERT INTO Customer (email, password, Username) Values (inputEmail,Pword,Uname) ON CONFLICT(email) DO NOTHING;
+                RETURN TRUE;
+            ELSE
+                RAISE EXCEPTION 'cannot have a negative salary'; 
+                RETURN FALSE;
+            END IF;
+        END;
+        $$ LANGUAGE plpgsql;"""
+        cur.execute(query)
+        conn.commit()
