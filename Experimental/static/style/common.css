@@ -37,3 +37,27 @@ img{
     margin-left: 100px;
     float: left;
 }
+/*a {
+  padding-left: 5px;
+}*/
+
+/* some simple transitions to make the upvote and downvote
+buttons fade in as a visual cue for the user */
+
+.glyphicon {
+  opacity: 1;
+  transition: opacity .25s ease-in-out;
+  -moz-transition: opacity .25s ease-in-out;
+  -webkit-transition: opacity .25s ease-in-out;
+  font-size: 20px;
+}
+
+.glyphicon:hover {
+  opacity: 0.75;
+  cursor: pointer;
+}
+ol, ul {
+    margin-left: -5%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}

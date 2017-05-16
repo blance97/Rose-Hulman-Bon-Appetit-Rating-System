@@ -4,6 +4,7 @@ from datetime import date
 import calendar
 import sys
 from flask import Flask, jsonify, current_app, request,abort,redirect, url_for, make_response
+from flask_socketio import SocketIO
 from bs4 import BeautifulSoup
 import logging
 import schedule
@@ -17,6 +18,7 @@ from Database import myDB
 
 app = Flask(__name__)
 app.secret_key = "any random string"
+socketio = SocketIO(app)
 app.logger.addHandler(logging.StreamHandler(sys.stdout))
 app.logger.setLevel(logging.DEBUG)
 Config = ConfigParser.ConfigParser()
@@ -56,6 +58,7 @@ DINNER = 34
 def setup():
     global page 
     global soup 
+    socketio.run(app)
     app.logger.debug("UPDATE AT 7")
     soup =  BeautifulSoup(page, "html.parser")
     page = urllib2.urlopen(wiki)
@@ -153,7 +156,8 @@ def addComment():
     app.logger.debug("comment " + comment)
     app.logger.debug("username " + username)
     DB.addComment(int(foodid),1,str(comment),str(username))
-    return redirect('/ratings/?food=' + foodid)
+    # return redirect('/ratings/?food=' + foodid)
+    return ('', 204)
     #
     # addComment()
 @app.route("/register")
@@ -292,6 +296,23 @@ def deleteCustomer():
     app.logger.debug("deleted successfully")
     return current_app.send_static_file('admin.html')
 
+# web socket
+@socketio.on('my event', namespace='/ws')
+def test_message(message):
+    emit('my response', {'data': 432})
+
+@socketio.on('my broadcast event', namespace='/ws')
+def test_message(message):
+    emit('my response', {'data': message['data']}, broadcast=True)
+
+@socketio.on('connect', namespace='/ws')
+def test_connect():
+    emit('my response', {'data': 'Connected'})
+
+@socketio.on('disconnect', namespace='/ws')
+def test_disconnect():
+    print('Client disconnected')
+
 def getMatch(mealOfDay):
     global breakfastData
     global moenchData
@@ -425,4 +446,4 @@ def getMatch(mealOfDay):
         return toReturn 
 if __name__ == "__main__":
     setup()
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0',threaded=True)

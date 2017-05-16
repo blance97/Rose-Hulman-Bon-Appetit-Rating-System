@@ -17,13 +17,26 @@
                 <a class="navbar-brand" href="#">Best Meme</a>
             </div>
              <ul class="nav navbar-nav navbar-right">
-                <li id="user"><a href="#5">User</a></li>
+                <li id="user"><a href="">User</a></li>
                 <li><a href="#4" onclick="logout()">Logout</a></li>
             </ul>
         </div>
     </nav>
 
     <div class="detailBox">
+        
+          <div class="actionBox"></div>
+            <form class="form-inline" id="addComment" method="post" action="/addComment" role="form">
+                <div class="form-group">
+                    <input type="hidden" name="userID" id = "userID" value="123" />
+                    <input type="hidden" id = "foodid" name="foodid" value="" />
+                    <input class="form-control" type="text" name="comment" style="width: 500px;" placeholder="Your comment" />
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-default">Add</button>
+                </div>
+            </form>
+
         <div class="titleBox">
             <label id = "commentLabel">Comments For </label>
             <button type="button" class="close" aria-hidden="true">&times;</button>
@@ -32,18 +45,7 @@
 
             <!--<p class="taskDescription">Good food.</p>-->
         </div>
-        <div class="actionBox">
-        </div>
-            <form class="form-inline" method="post" action="/addComment" role="form">
-                <div class="form-group">
-                    <input type="hidden" name="userID" id = "userID" value="123" />
-                    <input type="hidden" id = "foodid" name="foodid" value="" />
-                    <input class="form-control" type="text" name="comment" placeholder="Your comment" />
-                </div>
-                <div class="form-group">
-                    <button class="btn btn-default">Add</button>
-                </div>
-            </form>
+      
         </div>
     </div>
 </body>

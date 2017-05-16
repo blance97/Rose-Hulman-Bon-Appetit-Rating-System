@@ -21,7 +21,7 @@ class myDB(object):
         conn.commit()
 
     def getComments(self, FoodID): #TODO: GET USERNAME INSTEAD
-        query = "SELECT comment,time,customeremail FROM (RATING JOIN GIVES ON gives.ratingtime = rating.time) WHERE RATING.foodid = %s"
+        query = "SELECT comment,time,customeremail FROM (RATING JOIN GIVES ON gives.ratingtime = rating.time) WHERE RATING.foodid = %s ORDER BY time DESC"
         data = (FoodID,)
         cur.execute(query, data)
         return cur.fetchall()
@@ -30,7 +30,6 @@ class myDB(object):
         query = "SELECT rateFood(%s,%s,%s,%s)"
         data = (foodID, ratings, Comment, uname)
         cur.execute(query, data)
-        conn.commit()
 
     def getFoodID(self, foodName):
         query = "SELECT foodid FROM food WHERE foodname = %s"

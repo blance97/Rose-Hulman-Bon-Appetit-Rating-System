@@ -1,5 +1,21 @@
 $(function () {
-   
+
+   var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
+   console.log(socket)
+    socket.on('my response', function(msg) {
+        $('#log').append('<p>Received: ' + msg.data + '</p>');
+    });
+    $('#menu-toggle').click(function(event) {
+        console.log("upvote");
+        socket.emit('my event', {data: $('#emit_data').val()});
+        return false;
+    });
+    $('form#broadcast').submit(function(event) {
+        socket.emit('my broadcast event', {data: $('#broadcast_data').val()});
+        return false;
+    });
+
+
     $.get("/getHours", function (data) {
         console.log("GET DATA");
         console.log(data)
@@ -69,8 +85,13 @@ function logout() {
         }
     })
 }
-
-
+	/*<li class="list-group-item">
+		<i class="glyphicon glyphicon-chevron-up" @click="upvote"></i>
+		<span class="label label-primary">{{ votes }}</span>
+		<i class="glyphicon glyphicon-chevron-down" @click="downvote"></i>
+		<a>{{ post.title }}</a>
+	</li>*/
+//    <a id="menu-toggle" href="#" class="btn btn-default"><i class="glyphicon glyphicon-arrow-right"></i></a>
 function getLunch() {
     $('#here_table').empty()
      var content = `<table class="table table-striped">
@@ -84,7 +105,12 @@ function getLunch() {
     $.get("/getLunch", function (data) {
 
         for (i = 0; i < data.length; i++) {
-          content += '<tr><td>' + data[i]['FoodName'] + '<br/><i class="glyphicon glyphicon-star"></i>Rating: 25<br/><a href="ratings/?food=' + data[i]['FoodID'] + '">Comments</a></td>'
+          content += '<tr><td>' + data[i]['FoodName'] + '<br/><ul class="unstyled">'+
+          '<a id="menu-toggle"><i class="glyphicon glyphicon-chevron-up"></i></a>' +
+		  '<span class="label label-primary" style="font-size: 17px;" id="votes"> </span></br>' +
+		  '<i id="downvote" class="glyphicon glyphicon-chevron-down" @click="downvote"></i>' +
+	      '</ul>' +
+          '<br/><a href="ratings/?food=' + data[i]['FoodID'] + '">Comments</a></td>'
                 + '<td>' + restrictionData(data[i]['Kosher'], 'kosher')
             content += restrictionData(data[i]['vegan'], 'vegan') 
             content += restrictionData(data[i]['glutenFree'], 'glutenFree') 

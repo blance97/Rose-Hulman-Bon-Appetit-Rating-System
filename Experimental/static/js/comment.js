@@ -1,4 +1,5 @@
 var foodName
+var currentUser = ""
 $(function () {
     var labelArray1 = window.location.search.split('=');
     var label = labelArray1[1];
@@ -6,9 +7,24 @@ $(function () {
     document.title = getFoodName(label);
     $(commentLabel).html("Comment For: " + getFoodName(label));
     $(foodid).val(label);
-    $(userID).val(getUser());
+    currentUser = getUser();
+    console.log(currentUser);
+    $("#user").html('<a href="">' + getUser());
+    $("#userID").val(currentUser)
+    
     var ts = Math.round((new Date()).getTime() / 1000);
     var datets = new Date(ts * 1000);
+    $('#addComment').submit(function(){
+    $.ajax({
+      url: $('#addComment').attr('action'),
+      type: post,
+      data : $('#addComment').serialize(),
+      success: function(){
+        console.log('form submitted.');
+      }
+    });
+    return false;
+});
      var request = $.ajax({ 
         type: 'GET',
         url: "/getComments/?food=" + label,
@@ -24,9 +40,8 @@ $(function () {
                     + '</br>'
                     + '<div class="commentText">'
                     +    '<p class="">' + data[i][0]+ '</p> <span class="date sub-text">'+ timeDifference(datets, getPostDate(data[i][1].substring(0, data[i][1].length-3))); +'</span>'
-                   + '</div>'
-                + '</li>'
-
+                    + '</div>'
+                    + '</li>'
         }
         commentsBox += "</ul>"
         $('#commentBox').append(commentsBox);
