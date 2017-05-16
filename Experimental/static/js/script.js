@@ -28,7 +28,8 @@ function getBreakfast() {
           </thead>
           <tbody>`
         for (i = 0; i < data.length; i++) {
-           content += '<tr><td>' + data[i]['FoodName'] + '<br/><i class="glyphicon glyphicon-star"></i>Rating: 25<br/><a href="ratings/?food=' + data[i]['FoodName'] + '" target="_blank">Comments</a></td>'
+
+           content += '<tr><td>' + data[i]['FoodName'] + '<br/><i class="glyphicon glyphicon-star"></i>Rating: 25<br/><a href="ratings/?food=' + data[i]['FoodID'] + '">Comments</a></td>'
                 + '<td>' + restrictionData(data[i]['Kosher'], 'kosher')
             content += restrictionData(data[i]['vegan'], 'vegan') 
             content += restrictionData(data[i]['glutenFree'], 'glutenFree') 
@@ -83,7 +84,7 @@ function getLunch() {
     $.get("/getLunch", function (data) {
 
         for (i = 0; i < data.length; i++) {
-          content += '<tr><td>' + data[i]['FoodName'] + '<br/><i class="glyphicon glyphicon-star"></i>Rating: 25<br/><a href="ratings/?food=' + data[i]['FoodName'] + '" target="_blank">Comments</a></td>'
+          content += '<tr><td>' + data[i]['FoodName'] + '<br/><i class="glyphicon glyphicon-star"></i>Rating: 25<br/><a href="ratings/?food=' + data[i]['FoodID'] + '">Comments</a></td>'
                 + '<td>' + restrictionData(data[i]['Kosher'], 'kosher')
             content += restrictionData(data[i]['vegan'], 'vegan') 
             content += restrictionData(data[i]['glutenFree'], 'glutenFree') 
@@ -108,7 +109,7 @@ function getDinner() {
     $.get("/getDinner", function (data) {
 
         for (i = 0; i < data.length; i++) {
-            content += '<tr><td>' + data[i]['FoodName'] + '<br/><i class="glyphicon glyphicon-star"></i>Rating: 25<br/><a href="ratings/?food=' + data[i]["FoodName"] + '" target="_blank">Comments</a></td>'
+            content += '<tr><td>' + data[i]['FoodName'] + '<br/><i class="glyphicon glyphicon-star"></i>Rating: 25<br/><a href="ratings/?food=' + data[i]["FoodID"] + '">Comments</a></td>'
                 + '<td>' + restrictionData(data[i]['Kosher'], 'kosher')
             content += restrictionData(data[i]['vegan'], 'vegan') 
             content += restrictionData(data[i]['glutenFree'], 'glutenFree') 
@@ -131,8 +132,9 @@ function getMoench() {
           </thead>
           <tbody>`
      $.get("/getMoench", function (data) {
+         console.log(data)
         for (i = 0; i < data.length; i++) {
-            content += '<tr><td>' + data[i]['FoodName'] + '<br/><i class="glyphicon glyphicon-star"></i>Rating: 25<br/><a href="ratings/?food=' + data[i]['FoodName'] + '" target="_blank">Comments</a></td>'
+            content += '<tr><td>' + data[i]['FoodName'] + '<br/><i class="glyphicon glyphicon-star"></i>Rating: 25<br/><a href="ratings/?food=' + data[i]['FoodID'] + '">Comments</a></td>'
                 + '<td>' + restrictionData(data[i]['Kosher'], 'kosher')
             content += restrictionData(data[i]['vegan'], 'vegan') 
             content += restrictionData(data[i]['glutenFree'], 'glutenFree') 

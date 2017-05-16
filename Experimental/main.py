@@ -123,6 +123,13 @@ def index():
 @app.route("/rating")
 def renderRatings():
     return current_app.send_static_file('rating.html')
+
+@app.route("/getFoodName/")
+def getFoodName():
+    foodid = request.args.get('food')
+    app.logger.debug(foodid)
+    return jsonify(DB.getFoodName(foodid)[0][0])
+
 @app.route("/ratings/")
 def comments():
     comment = request.args.get('food')
@@ -134,24 +141,19 @@ def comments():
 
 @app.route("/getComments/")
 def getComments():
-    return jsonify(DB.getComments(5547887))
+    foodid = request.args.get('food')
+    return jsonify(DB.getComments(foodid))
 
 @app.route("/addComment", methods=['POST'])
 def addComment():
     comment = request.form['comment']
-    foodName = request.form['foodName']
-    userid = request.form['userID']
-    comment1 = json.dumps(comment)
-    app.logger.debug(comment1)
-    app.logger.debug("ADD COMMNET %s", str(comment))
-    msg = {
-        'userid': userid,
-        'comment': comment1,
-        'foodid': DB.getFoodID(foodName)[0][0],
-    }
-    app.logger.debug(msg)
-    DB.addComment(DB.getFoodID(foodName)[0][0], msg)
-    return current_app.send_static_file('rating.html')
+    foodid = request.form['foodid']
+    username = request.form['userID']
+    app.logger.debug("FOODID " + foodid)
+    app.logger.debug("comment " + comment)
+    app.logger.debug("username " + username)
+    DB.addComment(int(foodid),1,str(comment),str(username))
+    return redirect('/ratings/?food=' + foodid)
     #
     # addComment()
 @app.route("/register")
@@ -326,7 +328,7 @@ def getMatch(mealOfDay):
                         'Kosher': Kosher,
                         'FoodName': str(data[data.keys()[x]]['label']),
                         'Descrip': 'good',#change
-                        'Rating': 2.3 #change
+                        'FoodID': DB.getFoodID(data[data.keys()[x]]['label'])[0][0]
                     }
                     toReturn.append(msg)
         return toReturn 
@@ -356,7 +358,7 @@ def getMatch(mealOfDay):
                         'Kosher': Kosher,
                         'FoodName': str(data[data.keys()[x]]['label']),
                         'Descrip': 'good',#change
-                        'Rating': 2.3 #change
+                        'FoodID': DB.getFoodID(data[data.keys()[x]]['label'])[0][0]
                     }
                     toReturn.append(msg)
         return toReturn 
@@ -386,7 +388,7 @@ def getMatch(mealOfDay):
                         'Kosher': Kosher,
                         'FoodName': str(data[data.keys()[x]]['label']),
                         'Descrip': 'good',#change
-                        'Rating': 2.3 #change
+                        'FoodID': DB.getFoodID(data[data.keys()[x]]['label'])[0][0]
                     }
                     toReturn.append(msg)
         return toReturn 
@@ -417,7 +419,7 @@ def getMatch(mealOfDay):
                         'Kosher': Kosher,
                         'FoodName': str(data[data.keys()[x]]['label']),
                         'Descrip': 'good',#change
-                        'Rating': 2.3 #change
+                        'FoodID': DB.getFoodID(data[data.keys()[x]]['label'])[0][0]
                     }
                     toReturn.append(msg)
         return toReturn 

@@ -12,38 +12,38 @@ class myDB(object):
         cur = conn.cursor()
         self.insertFoodsFunctions()
         self.registerUserFunction()
+        self.AddCommentFunction()
 
     def insertFood(self, FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, FoodDescription, AvgRating, meal):
         query = "SELECT insertFoods(%s, %s, %s,%s,%s,%s, %s, %s, %s)"
         data = (FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, FoodDescription, AvgRating, meal)
         cur.execute(query, data)
         conn.commit()
-    def getComments(self, FoodID):
-        query = "SELECT comment FROM RATING WHERE foodid = %s"
+
+    def getComments(self, FoodID): #TODO: GET USERNAME INSTEAD
+        query = "SELECT comment,time,customeremail FROM (RATING JOIN GIVES ON gives.ratingtime = rating.time) WHERE RATING.foodid = %s"
         data = (FoodID,)
         cur.execute(query, data)
         return cur.fetchall()
     
+    def addComment(self, foodID, ratings, Comment, uname):
+        query = "SELECT rateFood(%s,%s,%s,%s)"
+        data = (foodID, ratings, Comment, uname)
+        cur.execute(query, data)
+        conn.commit()
+
     def getFoodID(self, foodName):
         query = "SELECT foodid FROM food WHERE foodname = %s"
         data = (foodName,)
         cur.execute(query, data)
         return cur.fetchall()
+
+    def getFoodName(self, foodid):
+        query = "SELECT foodname FROM food WHERE foodid = %s"
+        data = (foodid,)
+        cur.execute(query, data)
+        return cur.fetchall()
     
-    def addComment(self, foodID, Comment): # make stored procedure
-        oldComment = self.getComments(foodID)
-        current_app.logger.debug("OLD COMMENTS: " + str(oldComment))
-        if(len(oldComment) == 0):
-            current_app.logger.debug("FRIST TIME")
-            oldComment = []      
-        oldComment.append(Comment)
-        st = json.dumps(oldComment)
-        
-        query2 = "UPDATE rating SET comment = %s WHERE foodid = %s"
-        data2 = (st,foodID)
-        current_app.logger.debug("DATA: " + str(st) + " foodID: " + str(foodID))
-        cur.execute(query2, data2)
-        conn.commit()
 
     def registerUser(self, email, username, password):
         try:
@@ -130,16 +130,19 @@ class myDB(object):
         return cur.fetchall()
 
     def updateSessionTokenCustomer(self,login,sessionToken, email):
-        if(login == True):
-            query = "UPDATE customer SET sessionToken = %s WHERE email = %s"
-            data = (sessionToken,email)
-            cur.execute(query, data)
-            conn.commit()
-        else:
-            query = "UPDATE customer SET sessionToken = 0 WHERE sessiontoken = %s"
-            data = (sessionToken,)
-            cur.execute(query, data)
-            conn.commit()
+        try:
+            if(login == True):
+                query = "UPDATE customer SET sessionToken = %s WHERE email = %s"
+                data = (sessionToken,email)
+                cur.execute(query, data)
+                conn.commit()
+            else:
+                query = "UPDATE customer SET sessionToken = 0 WHERE sessiontoken = %s"
+                data = (sessionToken,)
+                cur.execute(query, data)
+                conn.commit()
+        except:
+            conn.rollback()
 
 
     def checkEmployee(self,eid,password):
@@ -161,7 +164,7 @@ class myDB(object):
         query = "SELECT customer.username, customer.email, customer.favorite FROM customer;"
         cur.execute(query)
         return cur.fetchall()
-    
+
     #def getFoodInfo() :
         #call the top and bottom ranked foods here
     def getTopFood(self):
@@ -172,20 +175,41 @@ class myDB(object):
         query = "SELECT foodname, description, rating FRom food ORDER BY rating DESC limit 20"
         cur.execute(query)
         return cur.fetchall()
-    def insertFoodsFunctions(self):
-        query = """CREATE OR REPLACE FUNCTION insertFoods(fid integer, Vegetarian boolean,GlutenFree boolean, Vegan boolean, Kosher boolean, FoodName TEXT, Description text, Rating integer, meal INTEGER)
+    
+    def AddCommentFunction(self):
+        query = """CREATE OR REPLACE FUNCTION rateFood(fid integer,Ratings Integer, comment text, uname TEXT)
                     RETURNS integer AS $$
 	                declare
 	                getmenuID integer;
+	                getUsername text;
                     BEGIN
-                        INSERT INTO menu (meal, date) Values (meal, CURRENT_TIMESTAMP);
-                        SELECT MAX(MenuID) into getmenuID FROM menu;
-    
+                        SELECT email INTO getUsername FROM customer WHERE username = uname;
+                        SELECT menu.menuid INTO getmenuID FROM (contains JOIN menu ON contains.menuid = menu.menuid) where meal = 2;
+                        INSERT INTO rating (foodid,time,menuid,rating,comment) Values (fid, CURRENT_TIMESTAMP,getmenuID, Ratings, COMMENT);
+                        INSERT INTO Gives ( customeremail, ratingtime, foodid) Values (getUsername,CURRENT_TIMESTAMP,fid) ON CONFLICT DO NOTHING;
+                         
+                        RETURN getmenuID;
+                        END;
+                $$ LANGUAGE plpgsql;"""
+        cur.execute(query)
+        conn.commit()
+
+    def insertFoodsFunctions(self):
+        query = """CREATE OR REPLACE FUNCTION insertFoods(fid integer, Vegetarian boolean,GlutenFree boolean, Vegan boolean, Kosher boolean, FoodName TEXT, Description text, Rating integer, mealType INTEGER)
+                    RETURNS integer AS $$
+	                declare
+	                getmenuID integer;
+                    inContains integer := 0;
+                    BEGIN
+
+                        SELECT COUNT(*) INTO inContains FROM (contains JOIN menu ON contains.menuid = menu.menuid) WHERE contains.foodid = fid AND menu.meal = mealType;
+                        IF inContains = 0 THEN
                         INSERT INTO Food ( FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, Description, Rating) Values (fid,Vegetarian,Vegan, GlutenFree, Kosher,FoodName,Description,Rating) ON CONFLICT DO NOTHING;
-
-                        INSERT INTO rating ( FoodID, time, menuid) Values (fid, CURRENT_TIMESTAMP ,getmenuID) ON CONFLICT DO NOTHING;
-
-                        RETURN 1;
+                         INSERT INTO menu (meal, date) Values (mealType, CURRENT_TIMESTAMP);
+                            SELECT MAX(MenuID) into getmenuID FROM menu;
+                            INSERT INTO contains(foodid,menuid) VALUES(fid, getmenuID);
+                        END IF;
+                        RETURN inContains;
                         END;
                 $$ LANGUAGE plpgsql;"""
         cur.execute(query)

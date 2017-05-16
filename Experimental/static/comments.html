@@ -16,11 +16,9 @@
             <div class="navbar-header">
                 <a class="navbar-brand" href="#">Best Meme</a>
             </div>
-            <ul class="nav navbar-nav">
-                <li class="active"><a href="#" onclick="getMoench()">Home</a></li>
-                <li><a href="#1" onclick="getBreakfast()">Breakfast</a></li>
-                <li><a href="#2" onclick="getLunch()">Lunch</a></li>
-                <li><a href="#3" onclick="getDinner()">Dinner</a></li>
+             <ul class="nav navbar-nav navbar-right">
+                <li id="user"><a href="#5">User</a></li>
+                <li><a href="#4" onclick="logout()">Logout</a></li>
             </ul>
         </div>
     </nav>
@@ -30,16 +28,16 @@
             <label id = "commentLabel">Comments For </label>
             <button type="button" class="close" aria-hidden="true">&times;</button>
         </div>
-        <div class="commentBox">
+        <div id ="commentBox" class="commentBox">
 
-            <p class="taskDescription">Good food.</p>
+            <!--<p class="taskDescription">Good food.</p>-->
         </div>
         <div class="actionBox">
         </div>
             <form class="form-inline" method="post" action="/addComment" role="form">
                 <div class="form-group">
-                    <input type="hidden" name="userID" value="123" />
-                    <input type="hidden" id = "foodName" name="foodName" value="" />
+                    <input type="hidden" name="userID" id = "userID" value="123" />
+                    <input type="hidden" id = "foodid" name="foodid" value="" />
                     <input class="form-control" type="text" name="comment" placeholder="Your comment" />
                 </div>
                 <div class="form-group">
