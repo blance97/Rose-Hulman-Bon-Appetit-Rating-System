@@ -153,7 +153,8 @@ def addComment():
     app.logger.debug("FOODID " + foodid)
     app.logger.debug("comment " + comment)
     app.logger.debug("username " + username)
-    DB.addCommentOrRate(int(foodid),0,str(comment),str(username))
+    rating = 2
+    DB.addCommentOrRate(int(foodid), rating,comment, str(username))
     # return redirect('/ratings/?food=' + foodid)
     return ('', 204)
     #
@@ -165,7 +166,7 @@ def upvoteFood():
     Username = request.args.get('username')
     app.logger.debug("FOODID " + foodid)
     app.logger.debug("username " + Username)
-    DB.addCommentOrRate(int(foodid),1,None,str(Username))
+    DB.addCommentOrRate(int(foodid),1,"None",str(Username))
     return ('', 204)
 
 @app.route("/register")
@@ -200,7 +201,7 @@ def dinner():
 @app.route("/getMoench")
 def moench():
     return jsonify(getMatch(MOENCH))
-    
+
 @app.route("/getHours")
 def getHours():
     return jsonify(DB.getHours())
@@ -223,7 +224,7 @@ def Renderlogin():
     adminPass = Config.get('Development', 'adminPass')
     if(email == adminEmail and password == adminPass):
         app.logger.debug("admin success")
-        return current_app.send_static_file('admin.html')
+        return redirect('/admin')
     if DB.checkUser(str(email),str(password)) != 1:
         app.logger.debug("username/pass dne")
         abort(401, "USERNAME DOES NOT EXIST")

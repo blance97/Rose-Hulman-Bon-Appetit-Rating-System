@@ -39,7 +39,7 @@ $(function () {
                     + '</div>'
                     + '</br>'
                     + '<div class="commentText">'
-                    +    '<p class="">' + data[i][0]+ '</p> <span class="date sub-text">'+ timeDifference(datets, getPostDate(data[i][1].substring(0, data[i][1].length-3))); +'</span>'
+                    +    '<p class="">' + data[i][0]+ '</p> <span class="date sub-text">'+ timeDifference(datets, data[i][1]); +'</span>'
                     + '</div>'
                     + '</li>'
         }

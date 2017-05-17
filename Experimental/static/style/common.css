@@ -61,3 +61,8 @@ ol, ul {
     margin-top: 10px;
     margin-bottom: 10px;
 }
+
+#addEmps, #deleteEmps, #deleteCust {
+  padding-left: 15%;
+  padding-right: 15%;
+}

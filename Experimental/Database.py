@@ -3,6 +3,9 @@ import sys
 from datetime import datetime
 from flask import current_app
 import json
+from datetime import datetime
+import calendar
+
 class myDB(object):
 
     def __init__(self, databaseName, user, password, host, port):
@@ -21,21 +24,29 @@ class myDB(object):
         conn.commit()
 
     def getComments(self, FoodID): #TODO: GET USERNAME INSTEAD
-        query = "SELECT comment,time,customeremail FROM (RATING JOIN GIVES ON gives.ratingtime = rating.time) WHERE RATING.foodid = %s AND comment IS NOT NULL ORDER BY time DESC"
+        query = "SELECT comment,time,username FROM RATING WHERE RATING.foodid = %s AND comment IS NOT NULL ORDER BY time DESC"
         data = (FoodID,)
         cur.execute(query, data)
         return cur.fetchall()
     
     def addCommentOrRate(self, foodID, ratings, Comment, uname):
         print ' called'
+        d = datetime.utcnow()
+        unixtime = calendar.timegm(d.utctimetuple())
+        print unixtime
         # try:
+        current_app.logger.debug("COMMENT: %s,%s,%s,%s",str(foodID),str(ratings),str(Comment),str(uname))
         print "FOOD ID: " + str(foodID)
         print "ratings: " + str(ratings)
         print "Comment: " + str(Comment)
         print "uname: " + str(uname)
-        query = "SELECT rateFood(%s,%s,%s,%s)"
-        data = (foodID, ratings, Comment, uname)
+
+        query = "SELECT ratefood(%s,%s,%s,%s,%s)"
+        data = (foodID, ratings, Comment, uname, unixtime)
         cur.execute(query, data)
+        conn.commit()
+        #(fid integer, ratings integer, comment text, uname text, ratetime integer)
+
         # except:
         #     print Exception
         #     conn.rollback()
@@ -171,17 +182,43 @@ class myDB(object):
         return cur.fetchall()
     
     def AddCommentorRatingFunction(self):
-        query = """CREATE OR REPLACE FUNCTION rateFood(fid integer,Ratings Integer, comment text, uname TEXT)
-                    RETURNS integer AS $$
-	                declare
-	                getEmail text;
-                    BEGIN
-                        SELECT email INTO getEmail FROM customer WHERE username = uname;
-                        INSERT INTO rating (foodid,time,rating,comment) Values (fid, CURRENT_TIMESTAMP, Ratings, COMMENT);
-                        INSERT INTO Gives ( customeremail, ratingtime, foodid) Values (getEmail,CURRENT_TIMESTAMP,fid) ON CONFLICT DO NOTHING;     
-                        RETURN 1;
-                    END;
-                $$ LANGUAGE plpgsql;"""
+        query = """CREATE OR REPLACE FUNCTION ratefood(fid integer, ratings integer, newComment text, uname text, ratetime integer)
+                    RETURNS integer
+                    LANGUAGE plpgsql
+                    AS $function$
+                        declare
+                        rowCount integer;
+                        originalRating integer;
+                        BEGIN
+                            SELECT count(*) into rowCount FROM customer WHERE username = uname;
+                            if rowCount = 0 THEN
+                                return 0;
+                            END IF;
+                            SELECT count(*) into rowCount FROM food WHERE foodid = fid;
+                            if rowCount = 0 THEN
+                                return 0;
+                            END IF;
+                            if ratings = 2 THEN
+                                Select rating into originalRating From rating where foodid = fid and username = uname;
+                                SELECT count(*) into rowCount From rating Where foodid = fid AND username = uname;
+                                if rowCount = 0 THEN
+                                    INSERT INTO rating (foodid,time,rating,comment,username) Values (fid, ratetime, originalRating, newComment,uname);
+                                    RETURN 1;
+                                ELSE
+                                    Update rating Set comment = newComment Where foodid = fid AND username = uname;
+                                    Return 1;
+                                END IF;
+                            END IF;
+                            SELECT count(*) into rowCount From rating Where foodid = fid AND username = uname;
+                            if rowCount = 0 THEN
+                                INSERT INTO rating (foodid,ratetime,rating,username) Values (fid, time, ratings,uname);
+                                RETURN 1;
+                            ELSE
+                                Update rating Set rating = Ratings Where foodid = fid AND username = uname;
+                            END IF;
+                            RETURN 1;
+                        END;
+                    $function$"""
         cur.execute(query)
         conn.commit()
 
