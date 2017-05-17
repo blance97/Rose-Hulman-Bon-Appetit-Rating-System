@@ -23,12 +23,18 @@ class myDB(object):
         cur.execute(query, data)
         conn.commit()
 
+    def getRatingValue(self, FoodID):
+        query = "SELECT RATING FROM food WHERE foodid = %s"
+        data = (FoodID,)
+        cur.execute(query, data)
+        return cur.fetchall()
+
     def getComments(self, FoodID): #TODO: GET USERNAME INSTEAD
         query = "SELECT comment,time,username FROM RATING WHERE RATING.foodid = %s AND comment IS NOT NULL ORDER BY time DESC"
         data = (FoodID,)
         cur.execute(query, data)
         return cur.fetchall()
-    
+
     def addCommentOrRate(self, foodID, ratings, Comment, uname):
         print ' called'
         d = datetime.utcnow()
@@ -189,6 +195,7 @@ class myDB(object):
                         declare
                         rowCount integer;
                         originalRating integer;
+                        totalRating integer;
                         BEGIN
                             SELECT count(*) into rowCount FROM customer WHERE username = uname;
                             if rowCount = 0 THEN
@@ -211,11 +218,12 @@ class myDB(object):
                             END IF;
                             SELECT count(*) into rowCount From rating Where foodid = fid AND username = uname;
                             if rowCount = 0 THEN
-                                INSERT INTO rating (foodid,ratetime,rating,username) Values (fid, time, ratings,uname);
-                                RETURN 1;
+                                INSERT INTO rating (foodid,time,rating,username) Values (fid, ratetime, ratings,uname);
                             ELSE
                                 Update rating Set rating = Ratings Where foodid = fid AND username = uname;
                             END IF;
+                            SELECT SUM(rating) INTO totalRating FROM rating WHERE foodid = fid AND rating != 2;
+                            UPDATE food SET rating = totalRating WHERE foodid = fid; 
                             RETURN 1;
                         END;
                     $function$"""

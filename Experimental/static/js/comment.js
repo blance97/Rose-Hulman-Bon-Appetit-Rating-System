@@ -14,17 +14,7 @@ $(function () {
     
     var ts = Math.round((new Date()).getTime() / 1000);
     var datets = new Date(ts * 1000);
-    $('#addComment').submit(function(){
-    $.ajax({
-      url: $('#addComment').attr('action'),
-      type: post,
-      data : $('#addComment').serialize(),
-      success: function(){
-        console.log('form submitted.');
-      }
-    });
-    return false;
-});
+    console.log(datets)
      var request = $.ajax({ 
         type: 'GET',
         url: "/getComments/?food=" + label,
@@ -39,7 +29,7 @@ $(function () {
                     + '</div>'
                     + '</br>'
                     + '<div class="commentText">'
-                    +    '<p class="">' + data[i][0]+ '</p> <span class="date sub-text">'+ timeDifference(datets, data[i][1]); +'</span>'
+                    +    '<p class="">' + data[i][0]+ '</p> <span class="date sub-text">'+ timeDifference(new Date(new Date().valueOf()), new Date(data[i][1])); +'</span>'
                     + '</div>'
                     + '</li>'
         }

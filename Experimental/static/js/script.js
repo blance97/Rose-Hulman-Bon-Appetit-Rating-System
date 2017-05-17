@@ -1,5 +1,6 @@
-var socket = null;
+var mealState = 0;
 $(function () {
+    checklogin();
     $.get("/getHours", function (data) {
         console.log("GET DATA");
         console.log(data)
@@ -28,6 +29,7 @@ $(function () {
 });
 
 function upvote(foodID){
+    checklogin();
     console.log("upvote");
        $.ajax({
         type: "GET",
@@ -35,13 +37,56 @@ function upvote(foodID){
         contentType: "application/json; charset=utf-8",
         async: false,
         success: function(data) {
+            switch (mealState){
+                case 1:
+                    getBreakfast();
+                    break;
+                case 2:
+                    getLunch();
+                break;
+                case 3:
+                    getDinner();
+                break;
+                case 4:
+                    getMoench();
+                break;
+            }
         console.log("cliked "  )
             console.log("User: %s Updvodted %d",getUser(),foodID)
         }
     })
 }
 
+function downvote(foodID){
+    checklogin();
+       $.ajax({
+        type: "GET",
+        url: "/downvote?food=" + foodID + "&username=" + getUser(),
+        contentType: "application/json; charset=utf-8",
+        async: false,
+        success: function(data) {
+         switch (mealState){
+                case 1:
+                    getBreakfast();
+                    break;
+                case 2:
+                    getLunch();
+                break;
+                case 3:
+                    getDinner();
+                break;
+                case 4:
+                    getMoench();
+                break;
+            }
+            console.log("DOWNVOTE")
+        }
+    })
+}
+
 function getBreakfast() {
+    checklogin();
+    mealState = 1;
     $('#getHours').hide();
     $('#here_table').empty()
     var content = "<table>"
@@ -55,8 +100,12 @@ function getBreakfast() {
           </thead>
           <tbody>`
         for (i = 0; i < data.length; i++) {
-
-           content += '<tr><td>' + data[i]['FoodName'] + '<br/><i class="glyphicon glyphicon-star"></i>Rating: 25<br/><a href="ratings/?food=' + data[i]['FoodID'] + '">Comments</a></td>'
+            content += '<tr><td>' + data[i]['FoodName'] + '<br/><ul class="unstyled">'+
+          '<a onclick="upvote('+ data[i]['FoodID'] +')"> <i class="glyphicon glyphicon-chevron-up"></i></a>' +
+		  '<span class="label label-primary" style="font-size: 17px;" id="votes">'+ getFoodRating(data[i]['FoodID']) +'</span></br>' +
+		  '<a onclick="downvote('+ data[i]['FoodID'] +')"><i class="glyphicon glyphicon-chevron-down"></i></a>' +
+	      '</ul>' +
+          '<br/><a href="ratings/?food=' + data[i]['FoodID'] + '">Comments</a></td>'
                 + '<td>' + restrictionData(data[i]['Kosher'], 'kosher')
             content += restrictionData(data[i]['vegan'], 'vegan') 
             content += restrictionData(data[i]['glutenFree'], 'glutenFree') 
@@ -96,14 +145,10 @@ function logout() {
         }
     })
 }
-	/*<li class="list-group-item">
-		<i class="glyphicon glyphicon-chevron-up" @click="upvote"></i>
-		<span class="label label-primary">{{ votes }}</span>
-		<i class="glyphicon glyphicon-chevron-down" @click="downvote"></i>
-		<a>{{ post.title }}</a>
-	</li>*/
-//    <a id="menu-toggle" href="#" class="btn btn-default"><i class="glyphicon glyphicon-arrow-right"></i></a>
+
 function getLunch() {
+    checklogin();
+    mealState = 2;
     $('#getHours').hide();
     $('#here_table').empty()
      var content = `<table class="table table-striped">
@@ -118,7 +163,7 @@ function getLunch() {
         for (i = 0; i < data.length; i++) {
           content += '<tr><td>' + data[i]['FoodName'] + '<br/><ul class="unstyled">'+
           '<a onclick="upvote('+ data[i]['FoodID'] +')"> <i class="glyphicon glyphicon-chevron-up"></i></a>' +
-		  '<span class="label label-primary" style="font-size: 17px;" id="votes"> 24</span></br>' +
+		  '<span class="label label-primary" style="font-size: 17px;" id="votes">'+ getFoodRating(data[i]['FoodID']) +'</span></br>' +
 		  '<a onclick="downvote('+ data[i]['FoodID'] +')"><i class="glyphicon glyphicon-chevron-down"></i></a>' +
 	      '</ul>' +
           '<br/><a href="ratings/?food=' + data[i]['FoodID'] + '">Comments</a></td>'
@@ -134,9 +179,25 @@ function getLunch() {
 }
 
 
-
+function getFoodRating(foodid){
+    checklogin();
+    var foodRating = 0;
+      $.ajax({
+        type: "GET",
+        url: "/foodRating?foodid=" + foodid,
+        contentType: "application/json; charset=utf-8",
+        async: false,
+        success: function(data) {
+        console.log(data)
+            foodRating = data;
+        }
+    });
+    return foodRating;
+}
 
 function getDinner() {
+    checklogin();
+    mealState = 3;
     $('#getHours').hide();
     $('#here_table').empty()
      var content = `<table class="table table-striped">
@@ -148,11 +209,13 @@ function getDinner() {
           </thead>
           <tbody>`
     $.get("/getDinner", function (data) {
-
         for (i = 0; i < data.length; i++) {
-            content += '<tr><td>' + data[i]['FoodName'] 
-            + '<br/><i class="glyphicon glyphicon-star"></i>Rating: 25<br/><a href="ratings/?food=' 
-            + data[i]["FoodID"] + '">Comments</a></td>'
+            content += '<tr><td>' + data[i]['FoodName'] + '<br/><ul class="unstyled">'+
+          '<a onclick="upvote('+ data[i]['FoodID'] +')"> <i class="glyphicon glyphicon-chevron-up"></i></a>' +
+		  '<span class="label label-primary" style="font-size: 17px;" id="votes">'+ getFoodRating(data[i]['FoodID']) +'</span></br>' +
+		  '<a onclick="downvote('+ data[i]['FoodID'] +')"><i class="glyphicon glyphicon-chevron-down"></i></a>' +
+	      '</ul>' +
+          '<br/><a href="ratings/?food=' + data[i]['FoodID'] + '">Comments</a></td>'
                 + '<td>' + restrictionData(data[i]['Kosher'], 'kosher')
             content += restrictionData(data[i]['vegan'], 'vegan') 
             content += restrictionData(data[i]['glutenFree'], 'glutenFree') 
@@ -165,6 +228,8 @@ function getDinner() {
     });
 };
 function getMoench() {
+    checklogin();
+    mealState = 4;
     $('#getHours').hide();
     $('#here_table').empty()
      var content = `<table class="table table-striped">
@@ -178,7 +243,12 @@ function getMoench() {
      $.get("/getMoench", function (data) {
          console.log(data)
         for (i = 0; i < data.length; i++) {
-            content += '<tr><td>' + data[i]['FoodName'] + '<br/><i class="glyphicon glyphicon-star"></i>Rating: 25<br/><a href="ratings/?food=' + data[i]['FoodID'] + '">Comments</a></td>'
+            content += '<tr><td>' + data[i]['FoodName'] + '<br/><ul class="unstyled">'+
+          '<a onclick="upvote('+ data[i]['FoodID'] +')"> <i class="glyphicon glyphicon-chevron-up"></i></a>' +
+		  '<span class="label label-primary" style="font-size: 17px;" id="votes">'+ getFoodRating(data[i]['FoodID']) +'</span></br>' +
+		  '<a onclick="downvote('+ data[i]['FoodID'] +')"><i class="glyphicon glyphicon-chevron-down"></i></a>' +
+	      '</ul>' +
+          '<br/><a href="ratings/?food=' + data[i]['FoodID'] + '">Comments</a></td>'
                 + '<td>' + restrictionData(data[i]['Kosher'], 'kosher')
             content += restrictionData(data[i]['vegan'], 'vegan') 
             content += restrictionData(data[i]['glutenFree'], 'glutenFree') 
@@ -220,4 +290,14 @@ function restrictionData(data, type) {
 }
 
 
+function checklogin(){
+    var request = $.ajax({
+        type: 'GET',
+        url: '/checkLogin',
+        async: false,
+        success: function(data) {
+            //var obj = jQuery.parseJSON(data)
+        }
+    });
 
+}

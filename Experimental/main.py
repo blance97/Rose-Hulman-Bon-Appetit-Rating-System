@@ -153,10 +153,9 @@ def addComment():
     app.logger.debug("FOODID " + foodid)
     app.logger.debug("comment " + comment)
     app.logger.debug("username " + username)
-    rating = 2
-    DB.addCommentOrRate(int(foodid), rating,comment, str(username))
-    # return redirect('/ratings/?food=' + foodid)
-    return ('', 204)
+    DB.addCommentOrRate(int(foodid), 2 ,str(comment), str(username))
+    return redirect('/ratings/?food=' + foodid)
+    #return ('', 204)
     #
     # addComment()
 
@@ -168,6 +167,16 @@ def upvoteFood():
     app.logger.debug("username " + Username)
     DB.addCommentOrRate(int(foodid),1,"None",str(Username))
     return ('', 204)
+
+@app.route("/downvote/")
+def downvoteFood():
+    foodid = request.args.get('food')
+    Username = request.args.get('username')
+    app.logger.debug("FOODID " + foodid)
+    app.logger.debug("username " + Username)
+    DB.addCommentOrRate(int(foodid),-1,"None",str(Username))
+    return ('', 204)
+
 
 @app.route("/register")
 def renderRegister():
@@ -206,6 +215,12 @@ def moench():
 def getHours():
     return jsonify(DB.getHours())
 
+@app.route("/checkLogin")
+def checkLogin():
+    sid = request.cookies.get('SessionID')
+    if(sid == 0):
+        return current_app.send_static_file('index.html')
+    return ('',204)
 @app.route("/getUser")
 def getUsername():
     sid = request.cookies.get('SessionID')
@@ -257,6 +272,12 @@ def employeeLogin():
 @app.route("/admin")
 def RenderAdmin():
     return current_app.send_static_file('admin.html')
+
+@app.route("/foodRating/")
+def getFoods():
+    foodid = request.args.get('foodid')
+    app.logger.debug("FOODID " + foodid)
+    return jsonify(DB.getRatingValue(foodid)[0][0])
 
 @app.route("/getTopFood")
 def getTopFood():
