@@ -311,7 +311,7 @@ def addEmployee():
         app.logger.debug("employee id already there")
         abort(401, "EMPLOYEE ALREADY EXISTS")
     app.logger.debug("added successfully")
-    return current_app.redirect("/admin")
+    return current_app.send_static_file('admin.html')
 
 @app.route("/admin/deleteEmployee", methods=['GET','POST'])
 def deleteEmployee():

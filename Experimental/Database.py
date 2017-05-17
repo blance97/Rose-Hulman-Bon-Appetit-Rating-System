@@ -83,16 +83,21 @@ class myDB(object):
         data = (eid,fname,lname,password,worksat)
         cur.execute(query, data)
         conn.commit()
-        records = cur.fetchall()
-        return records
+        rowcount = cur.rowcount
+        current_app.logger.debug(rowcount)
+        if rowcount == 0:
+            return 0
+        return 1
 
     def deleteEmployee(self, eid):
         query = "select deleteEmployee (%s);"
         data = (eid,)
         cur.execute(query, data)
         conn.commit()
-        records = cur.fetchall()
-        return records
+        rowcount = cur.rowcount
+        if rowcount == 0:
+            return 0
+        return 1
 
     def deleteCustomer(self, username):
         query = "SELECT * FROM Customer WHERE username = %s"
@@ -178,12 +183,12 @@ class myDB(object):
     #def getFoodInfo() :
         #call the top and bottom ranked foods here
     def getTopFood(self):
-        query = "SELECT foodname, description, rating FRom food ORDER BY rating limit 20"
+        query = "SELECT foodname, description, rating FRom food ORDER BY rating DESC limit 20"
         cur.execute(query)
         return cur.fetchall()
 
     def getBotFood(self):
-        query = "SELECT foodname, description, rating FRom food ORDER BY rating DESC limit 20"
+        query = "SELECT foodname, description, rating FRom food ORDER BY rating limit 20"
         cur.execute(query)
         return cur.fetchall()
     
