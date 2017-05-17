@@ -35,7 +35,7 @@ function getEmployees() {
             content += '<td><i class="glyphicon glyphicon-trash"></i></td>';
             content += '</tr>';
         }
-        content += "</table>"
+        content += "</tbody></table>"
 
         $('#adminTable').append(content);
     });
@@ -70,7 +70,7 @@ function getCustomers() {
             content += '<td><i class="glyphicon glyphicon-trash"></i></td>';
             content += '</tr>';
         }
-        content += "</table>"
+        content += "</tbody></table>"
 
         $('#adminTable').append(content);
     });
@@ -102,12 +102,24 @@ function getTopFood() {
     $('#deleteCust').hide()
     $('#adminTable').show()
     $('#adminTable').empty()
-    var content = "<table>"
+    var content = `<div class="food-table"><table class="table table-striped">
+        <thead>
+          <tr>
+              <th width="25%">Food</th>
+              <th width="25%">Description</th>
+              <th width="25%">Rating</th>         
+            </tr>
+          </thead>
+          <tbody>`
     $.get("/getTopFood", function (data) {
         for (i = 0; i < data.length; i++) {
-            content += '<tr><td>' + '<span class = "text">'+ data[i] + '</b>' + '</span><br>' + '</td></tr>';
+             content += '<tr>'
+            for (j = 0; j < 3; j++) {
+                content += '<td>' + data[i][j] + '</td>';
+            }
+            content += '</tr>';
         }
-        content += "</table>"
+        content += "</tbody></table></div>"
 
         $('#adminTable').append(content);
     });
@@ -116,12 +128,24 @@ function getTopFood() {
 function getBotFood() {
     $('#adminTable').show()
     $('#adminTable').empty()
-    var content = "<table>"
+    var content = `<div class="food-table"><table class="table table-striped">
+        <thead>
+          <tr>
+              <th width="25%">Food</th>
+              <th width="25%">Description</th>
+              <th width="25%">Rating</th>         
+            </tr>
+          </thead>
+          <tbody>`
     $.get("/getBotFood", function (data) {
         for (i = 0; i < data.length; i++) {
-            content += '<tr><td>' + '<span class = "text">'+ data[i] + '</b>' + '</span><br>' + '</td></tr>';
+             content += '<tr>'
+            for (j = 0; j < 3; j++) {
+                content += '<td>' + data[i][j] + '</td>';
+            }
+            content += '</tr>';
         }
-        content += "</table>"
+        content += "</tbody></table></div>"
 
         $('#adminTable').append(content);
     });

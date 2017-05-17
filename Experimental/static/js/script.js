@@ -3,16 +3,28 @@ $(function () {
     $.get("/getHours", function (data) {
         console.log("GET DATA");
         console.log(data)
-        var content = "<div>"
+        var content = `<table class="table table-striped">
+        <thead>
+          <tr>
+              <th width="20%">Cafe</th>
+              <th width="20%">Location</th>
+              <th width="60%">Hours</th>       
+            </tr>
+          </thead>
+          <tbody>`
         for (i = 0; i < data.length; i++) {
-            content += '<td>' + data[i] + '</td>'
+            content += '<tr>'
+            for (j = 0; j < 3; j++) {
+                content += '<td>' + data[i][j] + '</td>'
+            }
+            content += '</tr>'
         }
-        content += "</div>"
-
+        content += "</tbody></table>"
+        $('#getHours').show();
         $('#getHours').append(content);
     });
     $("#user").html('<a href="#5">' + getUser());
-    getMoench(); // how moench food first
+   
 });
 
 function upvote(foodID){
@@ -30,6 +42,7 @@ function upvote(foodID){
 }
 
 function getBreakfast() {
+    $('#getHours').hide();
     $('#here_table').empty()
     var content = "<table>"
     $.get("/getBreakfast", function (data) {
@@ -91,6 +104,7 @@ function logout() {
 	</li>*/
 //    <a id="menu-toggle" href="#" class="btn btn-default"><i class="glyphicon glyphicon-arrow-right"></i></a>
 function getLunch() {
+    $('#getHours').hide();
     $('#here_table').empty()
      var content = `<table class="table table-striped">
         <thead>
@@ -123,6 +137,7 @@ function getLunch() {
 
 
 function getDinner() {
+    $('#getHours').hide();
     $('#here_table').empty()
      var content = `<table class="table table-striped">
         <thead>
@@ -150,6 +165,7 @@ function getDinner() {
     });
 };
 function getMoench() {
+    $('#getHours').hide();
     $('#here_table').empty()
      var content = `<table class="table table-striped">
         <thead>
