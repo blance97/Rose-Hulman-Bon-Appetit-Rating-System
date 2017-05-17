@@ -12,7 +12,7 @@ class myDB(object):
         cur = conn.cursor()
         self.insertFoodsFunctions()
         self.registerUserFunction()
-        self.AddCommentFunction()
+        self.AddCommentorRatingFunction()
 
     def insertFood(self, FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, FoodDescription, AvgRating, meal):
         query = "SELECT insertFoods(%s, %s, %s,%s,%s,%s, %s, %s, %s)"
@@ -21,16 +21,25 @@ class myDB(object):
         conn.commit()
 
     def getComments(self, FoodID): #TODO: GET USERNAME INSTEAD
-        query = "SELECT comment,time,customeremail FROM (RATING JOIN GIVES ON gives.ratingtime = rating.time) WHERE RATING.foodid = %s ORDER BY time DESC"
+        query = "SELECT comment,time,customeremail FROM (RATING JOIN GIVES ON gives.ratingtime = rating.time) WHERE RATING.foodid = %s AND comment IS NOT NULL ORDER BY time DESC"
         data = (FoodID,)
         cur.execute(query, data)
         return cur.fetchall()
     
-    def addComment(self, foodID, ratings, Comment, uname):
+    def addCommentOrRate(self, foodID, ratings, Comment, uname):
+        print ' called'
+        # try:
+        print "FOOD ID: " + str(foodID)
+        print "ratings: " + str(ratings)
+        print "Comment: " + str(Comment)
+        print "uname: " + str(uname)
         query = "SELECT rateFood(%s,%s,%s,%s)"
         data = (foodID, ratings, Comment, uname)
         cur.execute(query, data)
-
+        # except:
+        #     print Exception
+        #     conn.rollback()
+        
     def getFoodID(self, foodName):
         query = "SELECT foodid FROM food WHERE foodname = %s"
         data = (foodName,)
@@ -175,7 +184,7 @@ class myDB(object):
         cur.execute(query)
         return cur.fetchall()
     
-    def AddCommentFunction(self):
+    def AddCommentorRatingFunction(self):
         query = """CREATE OR REPLACE FUNCTION rateFood(fid integer,Ratings Integer, comment text, uname TEXT)
                     RETURNS integer AS $$
 	                declare
