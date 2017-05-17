@@ -121,8 +121,6 @@ def index():
     app.logger.debug("\n")
     return current_app.send_static_file('index.html')
 
-
-
 @app.route("/rating")
 def renderRatings():
     return current_app.send_static_file('rating.html')
@@ -160,6 +158,7 @@ def addComment():
     return ('', 204)
     #
     # addComment()
+
 @app.route("/upvote/")
 def upvoteFood():
     foodid = request.args.get('food')
@@ -185,18 +184,23 @@ def register():
     else:
         DB.registerUser(str(email), str(username), str(password1))
         return current_app.send_static_file('index.html')
+
 @app.route("/getBreakfast")
 def breakfast():
     return jsonify(getMatch(BREAKFAST))
+
 @app.route("/getLunch")
 def lunch():
     return jsonify(getMatch(LUNCH))
+
 @app.route("/getDinner")
 def dinner():
     return jsonify(getMatch(DINNER))
+
 @app.route("/getMoench")
 def moench():
     return jsonify(getMatch(MOENCH))
+    
 @app.route("/getHours")
 def getHours():
     return jsonify(DB.getHours())
