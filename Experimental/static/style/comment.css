@@ -18,13 +18,13 @@
     border-top:1px dotted #bbb;
 }
 .commentBox .form-group:first-child, .actionBox .form-group:first-child {
-    width:80%;
+    width:50%;
 }
 .commentBox .form-group:nth-child(2), .actionBox .form-group:nth-child(2) {
     width:18%;
 }
 .actionBox .form-group * {
-    width:100%;
+    width:75%;
 }
 .taskDescription {
     margin-top:10px 0;
@@ -32,7 +32,7 @@
 .commentList {
     padding:0;
     list-style:none;
-    max-height:200px;
+    max-height:500px;
     overflow:auto;
 }
 .commentList li {

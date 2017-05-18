@@ -32,7 +32,7 @@
     <div class="navbar" id="customerOptions">
         <ul class="nav navbar-nav">
             <li><a href="#4" onclick="getCustomers()">Customer List</a></li>
-            <li><a href="#5" onclick="deleteCustomer()">Delete</a></li>
+            <li><a href="#5" onclick="deleteCustomers()">Delete</a></li>
         </ul>
     </div>
     <div class="navbar" id="foodOptions">
@@ -43,46 +43,49 @@
     </div>
     <br>
     <div id="adminDisplay">
-        <div id="adminTable">
+        <div id="adminTable" class="container">
         </div>
-        <div id="addEmps">
+        <div id="addEmps" class="form-group">
               <br>
               <form id="employeeAdd" method="post" action="/admin/addEmployee">
                   <label for="employeeid">Employee Id</label>
-                  <input id="employeeid" type="text" name="employeeid" class="validate" required="" aria-required="true" maxlength="8" minlength="8">
+                  <input id="employeeid" type="text" name="employeeid" class="validate form-control" required="" aria-required="true" maxlength="8" minlength="8">
                   <br>
                   <label for="fname">First Name</label>
-                  <input id="fname" type="text" name="fname" class="validate" required="" aria-required="true">
+                  <input id="fname" type="text" name="fname" class="validate form-control" required="" aria-required="true">
                   <label for="lname">Last Name</label>
-                  <input id="lname" type="text" name="lname" class="validate" required="" aria-required="true">
+                  <input id="lname" type="text" name="lname" class="validate form-control" required="" aria-required="true">
                   <br>
                   <label for="worksat">Select Cafe:</label>
-                  <br><input id="worksat" type="radio" required="" name="worksat" value="Union Cafe">Union Cafe
-                  <br><input id="worksat" type="radio" required="" name="worksat" value="Logans">Logans
-                  <br><input id="worksat" type="radio" required="" name="worksat" value="Moench Cafe">Moench Cafe
+                  <br><input id="worksat" class="form-check-input" type="radio" required="" name="worksat" value="Union Cafe">Union Cafe
+                  <br><input id="worksat" class="form-check-input" type="radio" required="" name="worksat" value="Logans">Logans
+                  <br><input id="worksat" class="form-check-input" type="radio" required="" name="worksat" value="Moench Cafe">Moench Cafe
+                  <br><input id="worksat" class="form-check-input" type="radio" required="" name="worksat" value="C-Store">C-Store
+                  <br><input id="worksat" class="form-check-input" type="radio" required="" name="worksat" value="Subway">Subway
+                  <br><input id="worksat" class="form-check-input" type="radio" required="" name="worksat" value="Faculty Dining Room">Faculty Dining Room                  
                   <br>
                   <label for="password">Password</label>
-                  <input id="password" type="password" name="password" class="validate" required="" maxlength="32" minlength="8">
+                  <input id="password" type="password" name="password" class="validate form-control" required="" maxlength="32" minlength="8">
                   <br>
                   <label for="password">Re-enter Password</label>
-                  <input id="password" type="password" name="password2" class="validate" required="" maxlength="32" minlength="8">
+                  <input id="password" type="password" name="password2" class="validate form-control" required="" maxlength="32" minlength="8">
                   <br>
                   <button type="submit" class="btn blue-grey right waves-effect waves-light white-text">Add Employee</button>
               </form>
         </div>
-        <div id="deleteEmps">
+        <div id="deleteEmps" class="form-group">
             <br>
             <form id="employeeDelete" method="post" action="/admin/deleteEmployee">
                 <label for="eid">Employee Id</label>
-                <input id="eid" type="text" name="eid" class="validate" required="" aria-required="true" maxlength="8" minlength="8">
+                <input id="eid" type="text" name="eid" class="validate form-control" required="" aria-required="true" maxlength="8" minlength="8">
                 <br><button type="submit" class="btn blue-grey right waves-effect waves-light white-text">Delete Employee</button>
             </form>
         </div>
-        <div id="deleteCust">
+        <div id="deleteCust" class="form-group">
             <br>
             <form id="customerDelete" method="post" action="/admin/deleteCustomer">
                 <label for="username">Username</label>
-                <input id="username" type="text" name="username" class="validate" required="" aria-required="true">
+                <input id="username" type="text" name="username" class="validate form-control" required="" aria-required="true">
                 <br><button type="submit" class="btn blue-grey right waves-effect waves-light white-text">Delete Customer</button>
             </form>
         </div>
