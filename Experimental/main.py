@@ -258,16 +258,56 @@ def logout():
     resp.set_cookie('SessionID', "0")
     return resp
 
+@app.route("/logoutEmployee",  methods=['GET','POST'])
+def logoutEmployee():
+    sid = request.cookies.get('EmployeeSessionID')
+    DB.updateSessionTokenEmployee(False, sid, "N/A") 
+    resp = make_response()
+    resp.set_cookie('SessionID', "0")
+    return resp
+
 @app.route("/employeeLogin",  methods=['GET','POST'])
 def employeeLogin():
-    app.logger.debug("in the login method")
     eid = request.form['employeeid']
     password = request.form['epassword']
     if DB.checkEmployee(str(eid),str(password)) != 1:
         app.logger.debug("employee id/pass dne")
         abort(401, "employee id/pass DOES NOT EXIST")
-    app.logger.debug("not zero")    
-    return current_app.send_static_file('rating.html')
+    app.logger.debug("not zero")
+    sid = generate_session_id()
+    DB.updateSessionTokenEmployee(True,str(sid),eid)
+    resp = make_response(redirect('/employee'))
+    resp.set_cookie('EmployeeSessionID',str(sid),max_age=900)
+    return resp
+
+@app.route("/employee")
+def RenderEmployee():
+    return current_app.send_static_file('employee.html')
+
+@app.route("/getEmployeeHours")
+def getEmployeeHours():
+    sid = request.cookies.get('EmployeeSessionID')
+    coWorker = DB.getCoworkers(str(sid))
+    EmpHours = DB.getEmployeeHours(str(sid))
+    app.logger.debug("COWORKIER: %s, EMP HOURS %s", str(coWorker), str(EmpHours))
+    toReturn = {
+        "Coworker":coWorker,
+        "EmpHours":EmpHours
+        }
+    return jsonify(toReturn)
+
+@app.route("/getMenuEmployee")
+def getCoworkers():
+    sid = request.cookies.get('EmployeeSessionID')
+    breakfast = DB.getBreakfast()
+    lunch = DB.getLunch()
+    dinner = DB.getDinner()
+    toReturn = {
+        "Breakfast":breakfast,
+        "Lunch":lunch,
+        "Dinner":dinner
+    }
+    return jsonify(toReturn)
 
 @app.route("/admin")
 def RenderAdmin():

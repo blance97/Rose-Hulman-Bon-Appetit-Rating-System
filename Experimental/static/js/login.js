@@ -53,6 +53,7 @@ function checkSession() {
         }
     });
 }
+
 function logout() {
     $.post("/logout", function(data, status) {
         if (status == "success") {

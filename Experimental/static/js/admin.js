@@ -18,8 +18,7 @@ function getEmployees() {
               <th width="20%">First Name</th>
               <th width="20%">Last Name</th>
               <th width="20%">Employee ID</th>
-              <th width="20%">Cafe</th>
-              <th width="20%">Delete</th>           
+              <th width="20%">Cafe</th>       
             </tr>
           </thead>
           <tbody>`
@@ -32,7 +31,6 @@ function getEmployees() {
                 //+ '</span>'
                 content += '<td>' + data[i][j]  + '</td>';
             }
-            content += '<td><i class="glyphicon glyphicon-trash"></i></td>';
             content += '</tr>';
         }
         content += "</tbody></table>"

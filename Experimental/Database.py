@@ -13,7 +13,6 @@ class myDB(object):
         global cur
         conn = psycopg2.connect(database=databaseName, user=user, password=password, host=host, port=port)
         cur = conn.cursor()
-        self.insertFoodsFunctions()
         self.registerUserFunction()
         self.AddCommentorRatingFunction()
 
@@ -120,11 +119,25 @@ class myDB(object):
         return cur.fetchall()
 
     def getHours(self):
-        query = "SELECT * FROM CAFE"
+        query = "SELECT * FROM allCafeHours"
         cur.execute(query)
         # retrieve the records from the database
         records = cur.fetchall()
         return records
+
+    def getEmployeeHours(self, sessiontoken):
+        query = "Select c.cafename, c.location, c.hours from (employee e join worksat w on e.employeeid = w.employeeid) join cafe c on w.cafename = c.cafename where e.sessiontoken = %s"
+        current_app.logger.debug("QUERY: " +str(query))
+        data = (sessiontoken,)
+        cur.execute(query,data)
+        return cur.fetchall()
+
+    def getCoworkers(self, sessiontoken):
+        query2 = "select em.fname, em.lname from employee em join worksat wa on em.employeeid = wa.employeeid where wa.cafename = (Select w.cafename from employee e join worksat w on e.employeeid = w.employeeid where e.sessiontoken = %s)"
+        current_app.logger.debug("QUERY: " +str(query2))
+        data = (sessiontoken,)
+        cur.execute(query2,data)
+        return cur.fetchall()
 
     def checkUser(self, email, password):
         query = "SELECT username FROM Customer WHERE email = %s AND password = %s"
@@ -158,6 +171,20 @@ class myDB(object):
         except:
             conn.rollback()
 
+    def updateSessionTokenEmployee(self,login,sessionToken,eid):
+        try:
+            if(login == True):
+                query = "UPDATE employee SET sessiontoken = %s WHERE employeeid = %s"
+                data = (sessionToken,eid)
+                cur.execute(query, data)
+                conn.commit()
+            else:
+                query = "UPDATE employee SET sessionToken = 0 WHERE sessiontoken = %s"
+                data = (sessionToken,)
+                cur.execute(query, data)
+                conn.commit()
+        except:
+            conn.rollback()
 
     def checkEmployee(self,eid,password):
         query = "SELECT employeeid FROM Employee WHERE employeeid = %s AND password = %s"
@@ -171,7 +198,7 @@ class myDB(object):
             return 0
 
     def getEmployees(self):
-        query = "SELECT employee.fname, employee.lname, employee.employeeid,worksat.cafename FROM (employee JOIN worksat ON employee.employeeid = worksat.employeeid);"
+        query = "SELECT * FROM employeeview;"
         cur.execute(query)
         return cur.fetchall()
 
@@ -235,26 +262,6 @@ class myDB(object):
         cur.execute(query)
         conn.commit()
 
-    def insertFoodsFunctions(self):
-        query = """CREATE OR REPLACE FUNCTION insertFoods(fid integer, Vegetarian boolean,GlutenFree boolean, Vegan boolean, Kosher boolean, FoodName TEXT, Description text, Rating integer, mealType INTEGER)
-                    RETURNS integer AS $$
-	                declare
-	                getmenuID integer;
-                    inContains integer := 0;
-                    BEGIN
-                        SELECT COUNT(*) INTO inContains FROM (contains JOIN menu ON contains.menuid = menu.menuid) WHERE contains.foodid = fid AND menu.meal = mealType AND menu.date = CURRENT_DATE;
-                        IF inContains = 0 THEN
-                            INSERT INTO Food ( FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, Description, Rating) Values (fid,Vegetarian,Vegan, GlutenFree, Kosher,FoodName,Description,Rating) ON CONFLICT DO NOTHING;
-                            INSERT INTO menu (meal, date) Values (mealType, CURRENT_DATE);
-                            SELECT MAX(MenuID) into getmenuID FROM menu;
-                            INSERT INTO contains(foodid,menuid) VALUES(fid, getmenuID);
-                        END IF;
-                        RETURN inContains;
-                    END;
-                $$ LANGUAGE plpgsql;"""
-        cur.execute(query)
-        conn.commit()
-
     def registerUserFunction(self):
         #Check uniqueness
         query = """CREATE OR REPLACE FUNCTION registerUser (
@@ -278,3 +285,18 @@ class myDB(object):
         $$ LANGUAGE plpgsql;"""
         cur.execute(query)
         conn.commit()
+
+    def getBreakfast(self):
+        query ="select f.foodname from (menu m join contains c on m.menuid = c.menuid) join food f on c.foodid = f.foodid where m.date = current_date and m.meal = 0;"
+        cur.execute(query)
+        return cur.fetchall()
+    
+    def getLunch(self):
+        query ="select f.foodname from (menu m join contains c on m.menuid = c.menuid) join food f on c.foodid = f.foodid where m.date = current_date and m.meal = 1;"
+        cur.execute(query)
+        return cur.fetchall()
+
+    def getDinner(self):
+        query ="select f.foodname from (menu m join contains c on m.menuid = c.menuid) join food f on c.foodid = f.foodid where m.date = current_date and m.meal = 2;"
+        cur.execute(query)
+        return cur.fetchall()

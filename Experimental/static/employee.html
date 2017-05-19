@@ -5,8 +5,8 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="../static/js/employee.js"></script>
     <link rel="stylesheet" type="text/css" href="../static/style/common.css">
-    <script src="../static/js/admin.js"></script>
 </head>
 
 <body>
@@ -16,23 +16,35 @@
                 <a class="navbar-brand" href="#">Best Meme</a>
             </div>
             <ul class="nav navbar-nav">
-                <li><a href="#" onclick="getEmployees()">Employees</a></li>
-                <li><a href="#1" onclick="getCustomers()">Customers</a></li>
-                <li><a href="#2" onclick="getTopFood()">Food</a></li>
+                <li><a href="#" onclick="getWorkPlace()">Cafe</a></li>
+                <li><a href="#2" onclick="getMenu()">Today's Menu</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="#3" onclick="logout()">Logout</a></li>
             </ul>
         </div>
     </nav>
-    <div class="navbar" id="employeeOptions">
-        <ul class="nav navbar-nav">
-            <li><a href="#1" onclick="getCafeHours()">Cafe Hours</a></li>
-            <li><a href="#2" onclick="getCafeEmployees()">Cafe Employees</a></li>
-        </ul>
-    </div>
-    <br>
     <div id="employeeDisplay">
-        <div id="cafeHours">
+        <div id="cafeInfo">
+            <div id="cafeHours">
+                <div class="center-cafe">
+                    <br>
+                    <h4 id="cafeName"><b>Working At: </b></h4>
+                    <p id="cafeLocation"><b>Location: </b></p>
+                    <p id="hours"><b>Hours:</b><br> </p>
+                    </br>
+                </div>
+            </div>
+            <div id="cafeEmployees" class="container">
+            </div>
         </div>
-        <div id="cafeEmployees">
+    </div>
+    <div id="foodDisplay">
+        <div id="breakfast" class="col-sm-4">
+        </div>
+        <div id="lunch" class="col-sm-4">
+        </div>
+        <div id="dinner" class="col-sm-4">
         </div>
     </div>
 </body>
