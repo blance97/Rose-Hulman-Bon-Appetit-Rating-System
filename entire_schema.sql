@@ -99,20 +99,28 @@ ALTER FUNCTION public.deleteemployee(eid integer) OWNER TO postgres;
 CREATE FUNCTION insertfoods(fid integer, vegetarian boolean, glutenfree boolean, vegan boolean, kosher boolean, foodname text, description text, rating integer, mealtype integer) RETURNS integer
     LANGUAGE plpgsql
     AS $$
-	                declare
-	                getmenuID integer;
-                    inContains integer := 0;
-                    BEGIN
-                        SELECT COUNT(*) INTO inContains FROM (contains JOIN menu ON contains.menuid = menu.menuid) WHERE contains.foodid = fid AND menu.meal = mealType AND menu.date = CURRENT_DATE;
-                        IF inContains = 0 THEN
-                            INSERT INTO Food ( FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, Description, Rating) Values (fid,Vegetarian,Vegan, GlutenFree, Kosher,FoodName,Description,Rating) ON CONFLICT DO NOTHING;
-                            INSERT INTO menu (meal, date) Values (mealType, CURRENT_DATE);
-                            SELECT MAX(MenuID) into getmenuID FROM menu;
-                            INSERT INTO contains(foodid,menuid) VALUES(fid, getmenuID);
-                        END IF;
-                        RETURN inContains;
-                    END;
-                $$;
+declare
+getmenuID integer;
+inContains integer;
+inFood Integer;
+menuExists integer;
+BEGIN
+    SELECT count(*) into inFood From food where foodid = fid;
+    if inFood = 0 then
+        iNSERT INTO Food ( FoodID, Vegetarian, Vegan, GlutenFree, Kosher, FoodName, Description, Rating) Values (fid,Vegetarian,Vegan, GlutenFree, Kosher,FoodName,Description,Rating) ON CONFLICT DO NOTHING;
+    end if;
+    select count(*) into menuExists from menu where date = current_date and meal = mealtype;
+    if menuExists = 0 then
+        INSERT INTO menu (meal, date) Values (mealType, CURRENT_DATE);
+    end if;
+    SELECT menuid into getmenuID FROM menu where date = current_date and meal = mealtype ;
+    SELECT COUNT(*) INTO inContains FROM (contains JOIN menu ON contains.menuid = menu.menuid) WHERE contains.foodid = fid AND menu.menuid = getMenuID;
+    IF inContains = 0 THEN
+        INSERT INTO contains(foodid,menuid) VALUES(fid, getmenuID);
+    END IF;
+    RETURN inContains;
+END;
+$$;
 
 
 ALTER FUNCTION public.insertfoods(fid integer, vegetarian boolean, glutenfree boolean, vegan boolean, kosher boolean, foodname text, description text, rating integer, mealtype integer) OWNER TO postgres;
@@ -249,6 +257,19 @@ CREATE TABLE cafe (
 ALTER TABLE cafe OWNER TO postgres;
 
 --
+-- Name: allcafehours; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW allcafehours AS
+ SELECT cafe.cafename,
+    cafe.location,
+    cafe.hours
+   FROM cafe;
+
+
+ALTER TABLE allcafehours OWNER TO postgres;
+
+--
 -- Name: contains; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -285,11 +306,47 @@ CREATE TABLE employee (
     password character varying(32) NOT NULL,
     fname character varying(20) NOT NULL,
     lname character varying(20) NOT NULL,
+    sessiontoken text,
     CONSTRAINT "Check password length" CHECK ((char_length((password)::text) >= 8))
 );
 
 
 ALTER TABLE employee OWNER TO postgres;
+
+--
+-- Name: worksat; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE worksat (
+    employeeid integer NOT NULL,
+    cafename character varying(30) NOT NULL
+);
+
+
+ALTER TABLE worksat OWNER TO postgres;
+
+--
+-- Name: employeeview; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW employeeview AS
+ SELECT employee.employeeid,
+    employee.fname,
+    employee.lname,
+    worksat.cafename
+   FROM employee,
+    worksat
+  WHERE (employee.employeeid = worksat.employeeid);
+
+
+ALTER TABLE employeeview OWNER TO postgres;
+
+--
+-- Name: VIEW employeeview; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW employeeview IS 'Shows employee id, first and last name of employees, and where the employee works.';
+
 
 --
 -- Name: food; Type: TABLE; Schema: public; Owner: postgres
@@ -345,6 +402,17 @@ ALTER SEQUENCE menu_menuid_seq OWNED BY menu.menuid;
 
 
 --
+-- Name: menuexists; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE menuexists (
+    count bigint
+);
+
+
+ALTER TABLE menuexists OWNER TO postgres;
+
+--
 -- Name: rating; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -385,18 +453,6 @@ CREATE TABLE servinglocation (
 ALTER TABLE servinglocation OWNER TO postgres;
 
 --
--- Name: worksat; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE worksat (
-    employeeid integer NOT NULL,
-    cafename character varying(30) NOT NULL
-);
-
-
-ALTER TABLE worksat OWNER TO postgres;
-
---
 -- Name: menu menuid; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -407,638 +463,375 @@ ALTER TABLE ONLY menu ALTER COLUMN menuid SET DEFAULT nextval('menu_menuid_seq':
 -- Data for Name: cafe; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO cafe VALUES ('Faculty Dining Room', 'Union', 'CLOSED');
-INSERT INTO cafe VALUES ('C-Store', 'Apartments', 'GRAB ''N'' GOSERVED FROM 2:00 PM - 9:00 PM');
-INSERT INTO cafe VALUES ('Logans', 'Library', 'GRAB ''N'' GO SERVED FROM 10:00 AM - 11:00 PM');
-INSERT INTO cafe VALUES ('Moench Cafe', 'Moench', 'GRAB ''N'' GO SERVED FROM 7:45 AM - 3:00 PM');
-INSERT INTO cafe VALUES ('Union Cafe', 'Union', 'BREAKFAST SERVED FROM 7:00 AM - 10:00 AM
-LUNCH		10:45 AM - 2:00 PM
-DINNER		5:00 PM - 8:00 PM
-LATE NIGHT		9:00 PM - 11:00 PM');
-INSERT INTO cafe VALUES ('Subway', 'Apartments', 'LUNCH SERVED FROM 10:45 AM - 5:00 PM
-DINNER	             5:00 PM - 11:00 PM');
+COPY cafe (cafename, location, hours) FROM stdin;
+Faculty Dining Room	Union	CLOSED
+C-Store	Apartments	GRAB 'N' GOSERVED FROM 2:00 PM - 9:00 PM
+Logans	Library	GRAB 'N' GO SERVED FROM 10:00 AM - 11:00 PM
+Moench Cafe	Moench	GRAB 'N' GO SERVED FROM 7:45 AM - 3:00 PM
+Union Cafe	Union	BREAKFAST 7:00 AM - 10:00 AM<br>\nLUNCH 10:45 AM - 2:00 PM<br>\nDINNER 5:00 PM - 8:00 PM<br>\nLATE NIGHT 9:00 PM - 11:00 PM<br>
+Subway	Apartments	LUNCH 10:45 AM - 5:00 PM<br>\nDINNER 5:00 PM - 11:00 PM
+\.
 
 
 --
 -- Data for Name: contains; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO contains VALUES (28, 5769477);
-INSERT INTO contains VALUES (29, 5769476);
-INSERT INTO contains VALUES (30, 5769473);
-INSERT INTO contains VALUES (31, 5725286);
-INSERT INTO contains VALUES (32, 5725124);
-INSERT INTO contains VALUES (33, 5547941);
-INSERT INTO contains VALUES (34, 5547940);
-INSERT INTO contains VALUES (35, 5547943);
-INSERT INTO contains VALUES (36, 5547942);
-INSERT INTO contains VALUES (37, 5547945);
-INSERT INTO contains VALUES (38, 5547944);
-INSERT INTO contains VALUES (39, 5547947);
-INSERT INTO contains VALUES (40, 5547946);
-INSERT INTO contains VALUES (41, 5547948);
-INSERT INTO contains VALUES (42, 5547897);
-INSERT INTO contains VALUES (43, 5547896);
-INSERT INTO contains VALUES (44, 5547895);
-INSERT INTO contains VALUES (45, 5547894);
-INSERT INTO contains VALUES (46, 5547893);
-INSERT INTO contains VALUES (47, 5547892);
-INSERT INTO contains VALUES (48, 5547891);
-INSERT INTO contains VALUES (49, 5547890);
-INSERT INTO contains VALUES (50, 5725123);
-INSERT INTO contains VALUES (51, 5547950);
-INSERT INTO contains VALUES (52, 5547951);
-INSERT INTO contains VALUES (53, 5725125);
-INSERT INTO contains VALUES (54, 5601542);
-INSERT INTO contains VALUES (55, 5769456);
-INSERT INTO contains VALUES (56, 5769459);
-INSERT INTO contains VALUES (57, 5737771);
-INSERT INTO contains VALUES (58, 5547929);
-INSERT INTO contains VALUES (59, 5547887);
-INSERT INTO contains VALUES (60, 5547923);
-INSERT INTO contains VALUES (61, 5547921);
-INSERT INTO contains VALUES (62, 5547920);
-INSERT INTO contains VALUES (63, 5547888);
-INSERT INTO contains VALUES (64, 5547889);
-INSERT INTO contains VALUES (65, 5547925);
-INSERT INTO contains VALUES (66, 5547924);
-INSERT INTO contains VALUES (67, 5737149);
-INSERT INTO contains VALUES (68, 5601530);
-INSERT INTO contains VALUES (69, 5769448);
-INSERT INTO contains VALUES (70, 5769447);
-INSERT INTO contains VALUES (71, 5769444);
-INSERT INTO contains VALUES (72, 5547938);
-INSERT INTO contains VALUES (73, 5547939);
-INSERT INTO contains VALUES (74, 5547931);
-INSERT INTO contains VALUES (75, 5547932);
-INSERT INTO contains VALUES (76, 5547933);
-INSERT INTO contains VALUES (77, 5547934);
-INSERT INTO contains VALUES (78, 5547935);
-INSERT INTO contains VALUES (79, 5547936);
-INSERT INTO contains VALUES (80, 5547937);
-INSERT INTO contains VALUES (81, 5737759);
-INSERT INTO contains VALUES (82, 5601524);
-INSERT INTO contains VALUES (83, 5601525);
-INSERT INTO contains VALUES (84, 5601526);
-INSERT INTO contains VALUES (85, 5601527);
-INSERT INTO contains VALUES (86, 5769432);
-INSERT INTO contains VALUES (87, 5547905);
-INSERT INTO contains VALUES (88, 5547904);
-INSERT INTO contains VALUES (89, 5547907);
-INSERT INTO contains VALUES (90, 5547906);
-INSERT INTO contains VALUES (91, 5547903);
-INSERT INTO contains VALUES (92, 5547909);
-INSERT INTO contains VALUES (93, 5547908);
-INSERT INTO contains VALUES (94, 5769428);
-INSERT INTO contains VALUES (95, 5769421);
-INSERT INTO contains VALUES (96, 5547912);
-INSERT INTO contains VALUES (97, 5547913);
-INSERT INTO contains VALUES (98, 5547910);
-INSERT INTO contains VALUES (99, 5547911);
-INSERT INTO contains VALUES (100, 5547916);
-INSERT INTO contains VALUES (101, 5547917);
-INSERT INTO contains VALUES (102, 5547914);
-INSERT INTO contains VALUES (103, 5547915);
-INSERT INTO contains VALUES (104, 5547918);
-INSERT INTO contains VALUES (105, 5547919);
-INSERT INTO contains VALUES (106, 5547930);
-INSERT INTO contains VALUES (107, 5737401);
-INSERT INTO contains VALUES (108, 7079982);
-INSERT INTO contains VALUES (109, 7079978);
-INSERT INTO contains VALUES (110, 7079973);
-INSERT INTO contains VALUES (111, 7079954);
-INSERT INTO contains VALUES (112, 7079959);
-INSERT INTO contains VALUES (113, 7106029);
-INSERT INTO contains VALUES (114, 7080069);
-INSERT INTO contains VALUES (115, 7117323);
-INSERT INTO contains VALUES (116, 7117198);
-INSERT INTO contains VALUES (117, 7079969);
-INSERT INTO contains VALUES (118, 7117197);
-INSERT INTO contains VALUES (119, 7080082);
-INSERT INTO contains VALUES (120, 7114778);
-INSERT INTO contains VALUES (121, 7106040);
-INSERT INTO contains VALUES (122, 7079978);
-INSERT INTO contains VALUES (123, 7079973);
-INSERT INTO contains VALUES (124, 7082745);
-INSERT INTO contains VALUES (125, 7079954);
-INSERT INTO contains VALUES (126, 7079959);
-INSERT INTO contains VALUES (127, 7080069);
-INSERT INTO contains VALUES (128, 7119646);
-INSERT INTO contains VALUES (129, 7117323);
-INSERT INTO contains VALUES (130, 7117198);
-INSERT INTO contains VALUES (131, 7117197);
-INSERT INTO contains VALUES (132, 5769477);
-INSERT INTO contains VALUES (133, 5769476);
-INSERT INTO contains VALUES (134, 5769473);
-INSERT INTO contains VALUES (135, 5725286);
-INSERT INTO contains VALUES (136, 5725124);
-INSERT INTO contains VALUES (137, 5547941);
-INSERT INTO contains VALUES (138, 5547940);
-INSERT INTO contains VALUES (139, 5547943);
-INSERT INTO contains VALUES (140, 5547942);
-INSERT INTO contains VALUES (141, 5547945);
-INSERT INTO contains VALUES (142, 5547944);
-INSERT INTO contains VALUES (143, 5547947);
-INSERT INTO contains VALUES (144, 5547946);
-INSERT INTO contains VALUES (145, 5547948);
-INSERT INTO contains VALUES (146, 5547897);
-INSERT INTO contains VALUES (147, 5547896);
-INSERT INTO contains VALUES (148, 5547895);
-INSERT INTO contains VALUES (149, 5547894);
-INSERT INTO contains VALUES (150, 5547893);
-INSERT INTO contains VALUES (151, 5547892);
-INSERT INTO contains VALUES (152, 5547891);
-INSERT INTO contains VALUES (153, 5547890);
-INSERT INTO contains VALUES (154, 5725123);
-INSERT INTO contains VALUES (155, 5547950);
-INSERT INTO contains VALUES (156, 5547951);
-INSERT INTO contains VALUES (157, 5725125);
-INSERT INTO contains VALUES (158, 5601542);
-INSERT INTO contains VALUES (159, 5769456);
-INSERT INTO contains VALUES (160, 5769459);
-INSERT INTO contains VALUES (161, 5737771);
-INSERT INTO contains VALUES (162, 5547929);
-INSERT INTO contains VALUES (163, 5547887);
-INSERT INTO contains VALUES (164, 5547923);
-INSERT INTO contains VALUES (165, 5547921);
-INSERT INTO contains VALUES (166, 5547920);
-INSERT INTO contains VALUES (167, 5547888);
-INSERT INTO contains VALUES (168, 5547889);
-INSERT INTO contains VALUES (169, 5547925);
-INSERT INTO contains VALUES (170, 5547924);
-INSERT INTO contains VALUES (171, 5737149);
-INSERT INTO contains VALUES (172, 5601530);
-INSERT INTO contains VALUES (173, 5769448);
-INSERT INTO contains VALUES (174, 5769447);
-INSERT INTO contains VALUES (175, 5769444);
-INSERT INTO contains VALUES (176, 5547938);
-INSERT INTO contains VALUES (177, 5547939);
-INSERT INTO contains VALUES (178, 5547931);
-INSERT INTO contains VALUES (179, 5547932);
-INSERT INTO contains VALUES (180, 5547933);
-INSERT INTO contains VALUES (181, 5547934);
-INSERT INTO contains VALUES (182, 5547935);
-INSERT INTO contains VALUES (183, 5547936);
-INSERT INTO contains VALUES (184, 5547937);
-INSERT INTO contains VALUES (185, 5737759);
-INSERT INTO contains VALUES (186, 5601524);
-INSERT INTO contains VALUES (187, 5601525);
-INSERT INTO contains VALUES (188, 5601526);
-INSERT INTO contains VALUES (189, 5601527);
-INSERT INTO contains VALUES (190, 5769432);
-INSERT INTO contains VALUES (191, 5547905);
-INSERT INTO contains VALUES (192, 5547904);
-INSERT INTO contains VALUES (193, 5547907);
-INSERT INTO contains VALUES (194, 5547906);
-INSERT INTO contains VALUES (195, 5547903);
-INSERT INTO contains VALUES (196, 5547909);
-INSERT INTO contains VALUES (197, 5547908);
-INSERT INTO contains VALUES (198, 5769428);
-INSERT INTO contains VALUES (199, 5769421);
-INSERT INTO contains VALUES (200, 5547912);
-INSERT INTO contains VALUES (201, 5547913);
-INSERT INTO contains VALUES (202, 5547910);
-INSERT INTO contains VALUES (203, 5547911);
-INSERT INTO contains VALUES (204, 5547916);
-INSERT INTO contains VALUES (205, 5547917);
-INSERT INTO contains VALUES (206, 5547914);
-INSERT INTO contains VALUES (207, 5547915);
-INSERT INTO contains VALUES (208, 5547918);
-INSERT INTO contains VALUES (209, 5547919);
-INSERT INTO contains VALUES (210, 5547930);
-INSERT INTO contains VALUES (211, 5737401);
-INSERT INTO contains VALUES (212, 7079982);
-INSERT INTO contains VALUES (213, 7079978);
-INSERT INTO contains VALUES (214, 7079973);
-INSERT INTO contains VALUES (215, 7079954);
-INSERT INTO contains VALUES (216, 7079959);
-INSERT INTO contains VALUES (217, 7106029);
-INSERT INTO contains VALUES (218, 7080069);
-INSERT INTO contains VALUES (219, 7117323);
-INSERT INTO contains VALUES (220, 7117198);
-INSERT INTO contains VALUES (221, 7079969);
-INSERT INTO contains VALUES (222, 7117197);
-INSERT INTO contains VALUES (223, 7080082);
-INSERT INTO contains VALUES (224, 7114778);
-INSERT INTO contains VALUES (225, 7106040);
-INSERT INTO contains VALUES (226, 7079978);
-INSERT INTO contains VALUES (227, 7079973);
-INSERT INTO contains VALUES (228, 7082745);
-INSERT INTO contains VALUES (229, 7079954);
-INSERT INTO contains VALUES (230, 7079959);
-INSERT INTO contains VALUES (231, 7080069);
-INSERT INTO contains VALUES (232, 7119646);
-INSERT INTO contains VALUES (233, 7117323);
-INSERT INTO contains VALUES (234, 7117198);
-INSERT INTO contains VALUES (235, 7117197);
+COPY contains (menuid, foodid) FROM stdin;
+344	7170680
+344	7170681
+344	7170684
+344	7170678
+344	7170677
+345	7106047
+345	7106052
+345	7106058
+345	7100302
+345	7170705
+345	7170704
+345	7100298
+345	7100292
+345	7106063
+345	7134716
+346	7164957
+346	7106052
+346	7100302
+346	7170705
+346	7170704
+346	7100298
+346	7100292
+346	7106068
+345	5769477
+345	5769476
+345	5769473
+345	5725286
+345	5725125
+345	5725124
+345	5547941
+345	5547940
+345	5547943
+345	5547942
+345	5547945
+345	5547944
+345	5547947
+345	5547946
+345	5547948
+345	5547897
+345	5547896
+345	5547895
+345	5547894
+345	5547893
+345	5547892
+345	5547891
+345	5547890
+345	5725123
+345	5547950
+345	5547951
+345	5601542
+345	5769456
+345	5769459
+345	5737771
+345	5547929
+345	5547887
+345	5547923
+345	5547921
+345	5547920
+345	5547888
+345	5547889
+345	5547925
+345	5547924
+345	5737149
+345	5601530
+345	5769448
+345	5769447
+345	5769444
+345	5547938
+345	5547939
+345	5547930
+345	5547931
+345	5547932
+345	5547933
+345	5547934
+345	5547935
+345	5547936
+345	5547937
+345	5737759
+345	5601524
+345	5601525
+345	5601526
+345	5601527
+345	5769432
+345	5547905
+345	5547904
+345	5547907
+345	5547906
+345	5547903
+345	5547909
+345	5547908
+345	5769428
+345	5769421
+345	5547912
+345	5547913
+345	5547910
+345	5547911
+345	5547916
+345	5547917
+345	5547914
+345	5547915
+345	5547918
+345	5547919
+345	5737401
+\.
 
 
 --
 -- Data for Name: customer; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO customer VALUES ('username', 'username@username.com', 'password', NULL, '0555ba7b-1eaf-41cb-a3ff-3fa2204255c6');
-INSERT INTO customer VALUES ('newUser', 'test@gmail.com', 'asdasd', NULL, 'dfa50bbe-100b-41df-aecf-a64a91fc6834');
-INSERT INTO customer VALUES ('lancedinh7', 'lancedinh7@gmail.com', 'asdasd', NULL, 'bcb3f7a7-ebd9-4d28-b031-879f0b48d795');
+COPY customer (username, email, password, favorite, sessiontoken) FROM stdin;
+newUser	test@gmail.com	asdasd	\N	dfa50bbe-100b-41df-aecf-a64a91fc6834
+lancedinh7	lancedinh7@gmail.com	asdasd	\N	bcb3f7a7-ebd9-4d28-b031-879f0b48d795
+username	username@username.com	password	\N	5356a558-7034-45a4-8322-898da106807d
+\.
 
 
 --
 -- Data for Name: employee; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO employee VALUES (12345678, 'password', 'Maya', 'Holeman');
-INSERT INTO employee VALUES (11223344, 'password', 'Lance', 'Dinh');
+COPY employee (employeeid, password, fname, lname, sessiontoken) FROM stdin;
+11223344	password	Lance	Dinh	\N
+12345678	password	Maya	Holeman	7ebd1ac0-41cc-4880-a800-cd41da282996
+\.
 
 
 --
 -- Data for Name: food; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO food VALUES (7279200, false, true, true, false, 'spring salad with shallot and herb vinaigrette', 'good', 0);
-INSERT INTO food VALUES (7279189, false, true, false, false, 'white bean and ham soup', 'good', 0);
-INSERT INTO food VALUES (7279188, true, true, false, false, 'sweet potato bisque', 'good', 0);
-INSERT INTO food VALUES (7254461, false, true, false, false, 'loaded veggie pizza', 'good', 0);
-INSERT INTO food VALUES (7254540, false, true, false, false, 'Fischer Farms beef burger', 'good', 0);
-INSERT INTO food VALUES (7265247, false, true, false, false, 'roasted chicken with sweet onion mustard glaze', 'good', 0);
-INSERT INTO food VALUES (7256159, false, true, false, false, 'shrimp scampi pasta with tomatoes and parsley', 'good', 0);
-INSERT INTO food VALUES (7282611, false, true, false, false, 'grilled club sandwich with onion rings', 'good', 0);
-INSERT INTO food VALUES (7279187, false, true, true, false, 'vegan tofu and spinach scramble', 'good', 0);
-INSERT INTO food VALUES (7277358, false, true, false, false, 'triple berry smoothie', 'good', 0);
-INSERT INTO food VALUES (7255772, false, true, true, false, 'breakfast potatoes', 'good', 0);
-INSERT INTO food VALUES (7255758, false, true, false, false, 'scrambled eggs', 'good', 0);
-INSERT INTO food VALUES (7255759, true, true, false, false, 'buttermilk biscuits', 'good', 0);
-INSERT INTO food VALUES (7255770, false, true, false, false, 'turkey sausage links', 'good', 0);
-INSERT INTO food VALUES (7277361, false, true, false, false, 'red berry peach smoothie', 'good', 0);
-INSERT INTO food VALUES (7255747, false, false, false, false, 'double bacon cheeseburger', 'good', 0);
-INSERT INTO food VALUES (7232799, true, true, false, false, 'scrambled eggs', 'good', 0);
-INSERT INTO food VALUES (7199298, false, true, false, false, 'turkey meatloaf', 'good', 0);
-INSERT INTO food VALUES (7232802, false, true, true, false, 'tater tots', 'good', 0);
-INSERT INTO food VALUES (7232819, false, true, false, false, 'applewood bacon', 'good', 0);
-INSERT INTO food VALUES (5769477, false, true, true, false, 'Iced caffe americano 20 oz', 'good', 0);
-INSERT INTO food VALUES (5769476, false, true, true, false, 'iced caffe americano 16 oz', 'good', 0);
-INSERT INTO food VALUES (5769473, false, true, true, false, 'iced caffe americano 12 oz', 'good', 0);
-INSERT INTO food VALUES (5725286, false, true, true, false, 'flavored iced tea | unsweetened', 'good', 0);
-INSERT INTO food VALUES (5725124, true, true, false, false, 'caffe misto 16 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547941, true, true, false, false, 'coconut coffee syrup', 'good', 0);
-INSERT INTO food VALUES (5547940, true, true, false, false, 'cinnamon coffee syrup', 'good', 0);
-INSERT INTO food VALUES (5547943, true, true, false, false, 'hazelnut coffee syrup', 'good', 0);
-INSERT INTO food VALUES (5547942, true, true, false, false, 'dark chocolate coffee syrup', 'good', 0);
-INSERT INTO food VALUES (5547945, true, true, false, false, 'peppermint coffee syrup', 'good', 0);
-INSERT INTO food VALUES (5547944, true, true, false, false, 'Irish creme coffee syrup', 'good', 0);
-INSERT INTO food VALUES (5547947, true, true, false, false, 'strawberry coffee syrup', 'good', 0);
-INSERT INTO food VALUES (5547946, true, true, false, false, 'raspberry coffee syrup', 'good', 0);
-INSERT INTO food VALUES (5547948, true, true, false, false, 'toffee nut coffee syrup', 'good', 0);
-INSERT INTO food VALUES (5547897, true, true, false, false, 'iced caramel macchiato 20 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547896, true, true, false, false, 'iced caramel macchiato 16 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547895, true, true, false, false, 'iced caramel macchiato 12 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547894, true, true, false, false, 'caramel macchiato 20 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547893, true, true, false, false, 'caramel macchiato 16 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547892, true, true, false, false, 'caramel macchiato 12 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547891, false, true, true, false, 'iced coffee', 'good', 0);
-INSERT INTO food VALUES (5547890, true, true, false, false, 'caffe Americano', 'good', 0);
-INSERT INTO food VALUES (5725123, true, true, false, false, 'caffe misto 12 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547950, true, true, false, false, 'vanilla sugar free coffee syrup', 'good', 0);
-INSERT INTO food VALUES (5547951, true, true, false, false, 'white chocolate coffee syrup', 'good', 0);
-INSERT INTO food VALUES (5725125, true, true, false, false, 'caffe misto 20 fl oz', 'good', 0);
-INSERT INTO food VALUES (5601542, false, true, true, false, 'espresso dupio', 'good', 0);
-INSERT INTO food VALUES (5769456, true, true, false, false, 'espresso con panna solo', 'good', 0);
-INSERT INTO food VALUES (5769459, true, true, false, false, 'espresso con panna dupio', 'good', 0);
-INSERT INTO food VALUES (5737771, true, true, false, false, 'iced caffe mocha 2% milk 12 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547929, true, true, false, false, 'granulated sugar', 'good', 0);
-INSERT INTO food VALUES (5547887, false, true, true, false, 'iced tea | unsweetened', 'good', 0);
-INSERT INTO food VALUES (5547923, true, true, false, false, 'hot chocolate 12 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547921, true, true, false, false, 'espresso macchiato single 2%', 'good', 0);
-INSERT INTO food VALUES (5547920, true, true, false, false, 'white chocolate mocha 2% milk 20 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547888, false, true, true, false, 'black coffee', 'good', 0);
-INSERT INTO food VALUES (5547889, false, true, true, false, 'espresso solo', 'good', 0);
-INSERT INTO food VALUES (5547925, true, true, false, false, 'hot chocolate 20 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547924, true, true, false, false, 'hot chocolate 16 fl oz', 'good', 0);
-INSERT INTO food VALUES (5737149, true, true, false, false, 'lemonade', 'good', 0);
-INSERT INTO food VALUES (5601530, false, true, true, false, 'hot tea', 'good', 0);
-INSERT INTO food VALUES (5769448, true, true, false, false, 'vanilla steamer 20 oz', 'good', 0);
-INSERT INTO food VALUES (5769447, true, true, false, false, 'vanilla steamer 16 oz', 'good', 0);
-INSERT INTO food VALUES (5769444, true, true, false, false, 'vanilla steamer 12 oz', 'good', 0);
-INSERT INTO food VALUES (5547938, true, true, false, false, 'caramel coffee syrup', 'good', 0);
-INSERT INTO food VALUES (5547939, true, true, false, false, 'caramel sugar free coffee syrup', 'good', 0);
-INSERT INTO food VALUES (5547931, false, true, true, false, 'agave nectar', 'good', 0);
-INSERT INTO food VALUES (5547932, false, true, true, false, 'Splenda', 'good', 0);
-INSERT INTO food VALUES (5547933, true, true, false, false, '2% milk', 'good', 0);
-INSERT INTO food VALUES (5547934, true, true, false, false, 'skim milk', 'good', 0);
-INSERT INTO food VALUES (5547935, true, true, false, false, 'half & half', 'good', 0);
-INSERT INTO food VALUES (5547936, true, true, false, false, 'almond milk', 'good', 0);
-INSERT INTO food VALUES (5547937, true, true, false, false, 'soy milk', 'good', 0);
-INSERT INTO food VALUES (5737759, true, true, false, false, 'iced white chocolate mocha 12 fl oz', 'good', 0);
-INSERT INTO food VALUES (5601524, false, true, false, false, 'iced caffe latte 2% milk 12 fl oz', 'good', 0);
-INSERT INTO food VALUES (5601525, true, true, false, false, 'iced caffe mocha 2% milk 16 fl oz', 'good', 0);
-INSERT INTO food VALUES (5601526, true, true, false, false, 'iced white chocolate mocha 2% milk 16 fl oz', 'good', 0);
-INSERT INTO food VALUES (5601527, true, true, false, false, 'espresso macchiato double 2%', 'good', 0);
-INSERT INTO food VALUES (5769432, true, true, false, false, 'white hot chocolate 20 oz', 'good', 0);
-INSERT INTO food VALUES (5547905, true, true, false, false, 'caffe latte 2% milk 20 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547904, true, true, false, false, 'caffe latte 2% milk 16 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547907, true, true, false, false, 'caffe mocha 2% milk 16 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547906, true, true, false, false, 'caffe mocha 2% milk 12 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547903, true, true, false, false, 'caffe latte 2% milk 12 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547909, true, true, false, false, 'cappuccino 2% milk 12 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547908, true, true, false, false, 'caffe mocha 2% milk 20 fl oz', 'good', 0);
-INSERT INTO food VALUES (5769428, true, true, false, false, 'white hot chocolate 16 oz', 'good', 0);
-INSERT INTO food VALUES (5769421, true, true, false, false, 'white hot chocolate 12 oz', 'good', 0);
-INSERT INTO food VALUES (5547912, false, true, false, false, 'iced caffe latte 2% milk 16 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547913, true, true, false, false, 'iced caffe latte 2% milk 20 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547910, true, true, false, false, 'cappuccino 2% milk 16 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547911, true, true, false, false, 'cappuccino 2% milk 20 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547916, true, true, false, false, 'iced white chocolate mocha 2% milk 16 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547917, true, true, false, false, 'iced white chocolate mocha 2% milk 20 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547914, true, true, false, false, 'iced caffe mocha 2% milk 16 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547915, true, true, false, false, 'iced caffe mocha 2% milk 20fl oz', 'good', 0);
-INSERT INTO food VALUES (5547918, true, true, false, false, 'white chocolate mocha 2% milk 12 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547919, true, true, false, false, 'white chocolate mocha 2% milk 16 fl oz', 'good', 0);
-INSERT INTO food VALUES (5547930, true, true, false, false, 'honey', 'good', 0);
-INSERT INTO food VALUES (5737401, true, true, false, false, 'vanilla coffee syrup', 'good', 0);
-INSERT INTO food VALUES (7079959, false, true, false, false, 'pepperoni pizza', 'good', 0);
-INSERT INTO food VALUES (7254456, false, true, false, false, 'pepperoni pizza', 'good', 1);
-INSERT INTO food VALUES (7079978, true, true, false, false, 'grilled cheese', 'good', -1);
-INSERT INTO food VALUES (7254545, false, true, true, false, 'house-made bean burger', 'good', 1);
-INSERT INTO food VALUES (7257506, false, true, true, false, 'old-fashioned oatmeal', 'good', 1);
-INSERT INTO food VALUES (7079973, false, true, true, false, 'house-made bean burger', 'good', -1);
-INSERT INTO food VALUES (7254450, true, true, false, false, 'cheese pizza', 'good', -1);
-INSERT INTO food VALUES (7079954, true, true, false, false, 'cheese pizza', 'good', -1);
-INSERT INTO food VALUES (7255829, true, true, false, false, 'grilled cheese', 'good', 1);
-INSERT INTO food VALUES (7232820, false, true, true, false, 'old-fashioned oatmeal', 'good', 1);
-INSERT INTO food VALUES (7106029, false, true, false, false, 'chicken parmesan- Gluten free option upon request', 'good', 0);
-INSERT INTO food VALUES (7080069, false, true, false, false, 'loaded supreme pizza', 'good', 0);
-INSERT INTO food VALUES (7117323, true, true, false, false, 'antipasto salad', 'good', 0);
-INSERT INTO food VALUES (7117198, false, true, true, false, 'roasted tofu & vegetable soup', 'good', 0);
-INSERT INTO food VALUES (7079969, false, true, false, false, 'Fischer Farms beef burger', 'good', 0);
-INSERT INTO food VALUES (7117197, false, true, false, false, 'loaded baked potato soup', 'good', 0);
-INSERT INTO food VALUES (7114778, false, true, true, false, 'old-fashioned oatmeal', 'good', 0);
-INSERT INTO food VALUES (7106040, false, false, false, false, 'creamy beef stroganoff', 'good', 0);
-INSERT INTO food VALUES (7082745, true, false, false, false, 'roasted vegetable flatbread', 'good', 0);
-INSERT INTO food VALUES (7119646, false, false, false, false, 'italian beef and pepperjack flatbread', 'good', 0);
-INSERT INTO food VALUES (7254551, false, true, false, false, 'grilled all beef hot dog', 'good', -2);
-INSERT INTO food VALUES (7079982, false, true, false, false, 'grilled all beef hot dog', 'good', -2);
-INSERT INTO food VALUES (7080082, false, true, true, false, 'spinach tofu scramble', 'good', 1);
+COPY food (foodid, vegetarian, vegan, glutenfree, kosher, foodname, description, rating) FROM stdin;
+7279200	f	t	t	f	spring salad with shallot and herb vinaigrette	good	0
+7279189	f	t	f	f	white bean and ham soup	good	0
+7279188	t	t	f	f	sweet potato bisque	good	0
+7254461	f	t	f	f	loaded veggie pizza	good	0
+7254540	f	t	f	f	Fischer Farms beef burger	good	0
+7265247	f	t	f	f	roasted chicken with sweet onion mustard glaze	good	0
+7256159	f	t	f	f	shrimp scampi pasta with tomatoes and parsley	good	0
+7282611	f	t	f	f	grilled club sandwich with onion rings	good	0
+7279187	f	t	t	f	vegan tofu and spinach scramble	good	0
+7277358	f	t	f	f	triple berry smoothie	good	0
+7255772	f	t	t	f	breakfast potatoes	good	0
+7255758	f	t	f	f	scrambled eggs	good	0
+7255759	t	t	f	f	buttermilk biscuits	good	0
+7255770	f	t	f	f	turkey sausage links	good	0
+7277361	f	t	f	f	red berry peach smoothie	good	0
+7255747	f	f	f	f	double bacon cheeseburger	good	0
+7232799	t	t	f	f	scrambled eggs	good	0
+7199298	f	t	f	f	turkey meatloaf	good	0
+7232802	f	t	t	f	tater tots	good	0
+7232819	f	t	f	f	applewood bacon	good	0
+5769477	f	t	t	f	Iced caffe americano 20 oz	good	0
+5769476	f	t	t	f	iced caffe americano 16 oz	good	0
+5769473	f	t	t	f	iced caffe americano 12 oz	good	0
+5725286	f	t	t	f	flavored iced tea | unsweetened	good	0
+5725124	t	t	f	f	caffe misto 16 fl oz	good	0
+5547941	t	t	f	f	coconut coffee syrup	good	0
+5547940	t	t	f	f	cinnamon coffee syrup	good	0
+5547943	t	t	f	f	hazelnut coffee syrup	good	0
+5547942	t	t	f	f	dark chocolate coffee syrup	good	0
+5547945	t	t	f	f	peppermint coffee syrup	good	0
+5547944	t	t	f	f	Irish creme coffee syrup	good	0
+5547947	t	t	f	f	strawberry coffee syrup	good	0
+5547946	t	t	f	f	raspberry coffee syrup	good	0
+5547948	t	t	f	f	toffee nut coffee syrup	good	0
+5547897	t	t	f	f	iced caramel macchiato 20 fl oz	good	0
+5547896	t	t	f	f	iced caramel macchiato 16 fl oz	good	0
+5547895	t	t	f	f	iced caramel macchiato 12 fl oz	good	0
+5547894	t	t	f	f	caramel macchiato 20 fl oz	good	0
+5547893	t	t	f	f	caramel macchiato 16 fl oz	good	0
+5547892	t	t	f	f	caramel macchiato 12 fl oz	good	0
+5547891	f	t	t	f	iced coffee	good	0
+5547890	t	t	f	f	caffe Americano	good	0
+5725123	t	t	f	f	caffe misto 12 fl oz	good	0
+5547950	t	t	f	f	vanilla sugar free coffee syrup	good	0
+5547951	t	t	f	f	white chocolate coffee syrup	good	0
+5725125	t	t	f	f	caffe misto 20 fl oz	good	0
+5601542	f	t	t	f	espresso dupio	good	0
+5769456	t	t	f	f	espresso con panna solo	good	0
+5769459	t	t	f	f	espresso con panna dupio	good	0
+5737771	t	t	f	f	iced caffe mocha 2% milk 12 fl oz	good	0
+5547929	t	t	f	f	granulated sugar	good	0
+5547887	f	t	t	f	iced tea | unsweetened	good	0
+5547923	t	t	f	f	hot chocolate 12 fl oz	good	0
+5547921	t	t	f	f	espresso macchiato single 2%	good	0
+5547920	t	t	f	f	white chocolate mocha 2% milk 20 fl oz	good	0
+5547888	f	t	t	f	black coffee	good	0
+5547889	f	t	t	f	espresso solo	good	0
+5547925	t	t	f	f	hot chocolate 20 fl oz	good	0
+5547924	t	t	f	f	hot chocolate 16 fl oz	good	0
+5737149	t	t	f	f	lemonade	good	0
+5601530	f	t	t	f	hot tea	good	0
+5769448	t	t	f	f	vanilla steamer 20 oz	good	0
+5769447	t	t	f	f	vanilla steamer 16 oz	good	0
+5769444	t	t	f	f	vanilla steamer 12 oz	good	0
+5547938	t	t	f	f	caramel coffee syrup	good	0
+5547939	t	t	f	f	caramel sugar free coffee syrup	good	0
+5547931	f	t	t	f	agave nectar	good	0
+5547932	f	t	t	f	Splenda	good	0
+5547933	t	t	f	f	2% milk	good	0
+5547934	t	t	f	f	skim milk	good	0
+5547935	t	t	f	f	half & half	good	0
+5547936	t	t	f	f	almond milk	good	0
+5547937	t	t	f	f	soy milk	good	0
+5737759	t	t	f	f	iced white chocolate mocha 12 fl oz	good	0
+5601524	f	t	f	f	iced caffe latte 2% milk 12 fl oz	good	0
+5601525	t	t	f	f	iced caffe mocha 2% milk 16 fl oz	good	0
+5601526	t	t	f	f	iced white chocolate mocha 2% milk 16 fl oz	good	0
+5601527	t	t	f	f	espresso macchiato double 2%	good	0
+5769432	t	t	f	f	white hot chocolate 20 oz	good	0
+5547905	t	t	f	f	caffe latte 2% milk 20 fl oz	good	0
+5547904	t	t	f	f	caffe latte 2% milk 16 fl oz	good	0
+5547907	t	t	f	f	caffe mocha 2% milk 16 fl oz	good	0
+5547906	t	t	f	f	caffe mocha 2% milk 12 fl oz	good	0
+5547903	t	t	f	f	caffe latte 2% milk 12 fl oz	good	0
+5547909	t	t	f	f	cappuccino 2% milk 12 fl oz	good	0
+5547908	t	t	f	f	caffe mocha 2% milk 20 fl oz	good	0
+5769428	t	t	f	f	white hot chocolate 16 oz	good	0
+5769421	t	t	f	f	white hot chocolate 12 oz	good	0
+5547912	f	t	f	f	iced caffe latte 2% milk 16 fl oz	good	0
+5547913	t	t	f	f	iced caffe latte 2% milk 20 fl oz	good	0
+5547910	t	t	f	f	cappuccino 2% milk 16 fl oz	good	0
+5547911	t	t	f	f	cappuccino 2% milk 20 fl oz	good	0
+5547916	t	t	f	f	iced white chocolate mocha 2% milk 16 fl oz	good	0
+5547917	t	t	f	f	iced white chocolate mocha 2% milk 20 fl oz	good	0
+5547914	t	t	f	f	iced caffe mocha 2% milk 16 fl oz	good	0
+5547915	t	t	f	f	iced caffe mocha 2% milk 20fl oz	good	0
+5547918	t	t	f	f	white chocolate mocha 2% milk 12 fl oz	good	0
+5547919	t	t	f	f	white chocolate mocha 2% milk 16 fl oz	good	0
+5547930	t	t	f	f	honey	good	0
+5737401	t	t	f	f	vanilla coffee syrup	good	0
+7079959	f	t	f	f	pepperoni pizza	good	0
+7254456	f	t	f	f	pepperoni pizza	good	1
+7079978	t	t	f	f	grilled cheese	good	-1
+7254545	f	t	t	f	house-made bean burger	good	1
+7257506	f	t	t	f	old-fashioned oatmeal	good	1
+7079973	f	t	t	f	house-made bean burger	good	-1
+7254450	t	t	f	f	cheese pizza	good	-1
+7079954	t	t	f	f	cheese pizza	good	-1
+7255829	t	t	f	f	grilled cheese	good	1
+7232820	f	t	t	f	old-fashioned oatmeal	good	1
+7106029	f	t	f	f	chicken parmesan- Gluten free option upon request	good	0
+7080069	f	t	f	f	loaded supreme pizza	good	0
+7117323	t	t	f	f	antipasto salad	good	0
+7117198	f	t	t	f	roasted tofu & vegetable soup	good	0
+7079969	f	t	f	f	Fischer Farms beef burger	good	0
+7117197	f	t	f	f	loaded baked potato soup	good	0
+7114778	f	t	t	f	old-fashioned oatmeal	good	0
+7106040	f	f	f	f	creamy beef stroganoff	good	0
+7082745	t	f	f	f	roasted vegetable flatbread	good	0
+7119646	f	f	f	f	italian beef and pepperjack flatbread	good	0
+7254551	f	t	f	f	grilled all beef hot dog	good	-2
+7079982	f	t	f	f	grilled all beef hot dog	good	-2
+7080082	f	t	t	f	spinach tofu scramble	good	1
+7294601	f	t	f	f	strawberry smoothie	good	0
+7294602	f	t	f	f	raspberry vanilla	good	0
+7257509	f	t	t	f	old-fashioned oatmeal	good	0
+7292939	f	t	f	f	crispy chicken tenders	good	0
+7292942	f	t	f	f	mahogany roast pork, ginger glaze	good	0
+7170680	f	t	f	f	applewood bacon	good	0
+7170681	f	t	f	f	breakfast potato's	good	0
+7170684	f	t	f	f	banana coconut smoothie	good	0
+7170678	f	t	t	f	vegan tofu spinach scramble	good	0
+7170677	f	t	t	f	buttermilk biscuits	good	0
+7106047	f	t	f	f	Fischer Farms beef burger	good	0
+7106052	f	t	t	f	house-made bean burger	good	0
+7106058	f	t	f	f	grilled all beef hot dog	good	0
+7100302	f	t	f	f	breakfast pizza	good	0
+7170705	t	t	f	f	cream of cauliflower soup	good	0
+7170704	f	t	f	f	ham and bean soup with sun dried tomato	good	0
+7100298	f	t	f	f	chicken bacon pizza	good	0
+7100292	t	t	f	f	cheese pizza	good	0
+7106063	t	t	f	f	grilled cheese	good	0
+7134716	f	t	f	f	herb turkey meatballs	good	0
+7164957	f	t	f	f	baked potato bar	good	0
+7106068	f	f	f	f	crispy chicken tenders	good	0
+\.
 
 
 --
 -- Data for Name: menu; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO menu VALUES (28, 1, '2017-05-16');
-INSERT INTO menu VALUES (29, 1, '2017-05-16');
-INSERT INTO menu VALUES (30, 1, '2017-05-16');
-INSERT INTO menu VALUES (31, 1, '2017-05-16');
-INSERT INTO menu VALUES (32, 1, '2017-05-16');
-INSERT INTO menu VALUES (33, 1, '2017-05-16');
-INSERT INTO menu VALUES (34, 1, '2017-05-16');
-INSERT INTO menu VALUES (35, 1, '2017-05-16');
-INSERT INTO menu VALUES (36, 1, '2017-05-16');
-INSERT INTO menu VALUES (37, 1, '2017-05-16');
-INSERT INTO menu VALUES (38, 1, '2017-05-16');
-INSERT INTO menu VALUES (39, 1, '2017-05-16');
-INSERT INTO menu VALUES (40, 1, '2017-05-16');
-INSERT INTO menu VALUES (41, 1, '2017-05-16');
-INSERT INTO menu VALUES (42, 1, '2017-05-16');
-INSERT INTO menu VALUES (43, 1, '2017-05-16');
-INSERT INTO menu VALUES (44, 1, '2017-05-16');
-INSERT INTO menu VALUES (45, 1, '2017-05-16');
-INSERT INTO menu VALUES (46, 1, '2017-05-16');
-INSERT INTO menu VALUES (47, 1, '2017-05-16');
-INSERT INTO menu VALUES (48, 1, '2017-05-16');
-INSERT INTO menu VALUES (49, 1, '2017-05-16');
-INSERT INTO menu VALUES (50, 1, '2017-05-16');
-INSERT INTO menu VALUES (51, 1, '2017-05-16');
-INSERT INTO menu VALUES (52, 1, '2017-05-16');
-INSERT INTO menu VALUES (53, 1, '2017-05-16');
-INSERT INTO menu VALUES (54, 1, '2017-05-16');
-INSERT INTO menu VALUES (55, 1, '2017-05-16');
-INSERT INTO menu VALUES (56, 1, '2017-05-16');
-INSERT INTO menu VALUES (57, 1, '2017-05-16');
-INSERT INTO menu VALUES (58, 1, '2017-05-16');
-INSERT INTO menu VALUES (59, 1, '2017-05-16');
-INSERT INTO menu VALUES (60, 1, '2017-05-16');
-INSERT INTO menu VALUES (61, 1, '2017-05-16');
-INSERT INTO menu VALUES (62, 1, '2017-05-16');
-INSERT INTO menu VALUES (63, 1, '2017-05-16');
-INSERT INTO menu VALUES (64, 1, '2017-05-16');
-INSERT INTO menu VALUES (65, 1, '2017-05-16');
-INSERT INTO menu VALUES (66, 1, '2017-05-16');
-INSERT INTO menu VALUES (67, 1, '2017-05-16');
-INSERT INTO menu VALUES (68, 1, '2017-05-16');
-INSERT INTO menu VALUES (69, 1, '2017-05-16');
-INSERT INTO menu VALUES (70, 1, '2017-05-16');
-INSERT INTO menu VALUES (71, 1, '2017-05-16');
-INSERT INTO menu VALUES (72, 1, '2017-05-16');
-INSERT INTO menu VALUES (73, 1, '2017-05-16');
-INSERT INTO menu VALUES (74, 1, '2017-05-16');
-INSERT INTO menu VALUES (75, 1, '2017-05-16');
-INSERT INTO menu VALUES (76, 1, '2017-05-16');
-INSERT INTO menu VALUES (77, 1, '2017-05-16');
-INSERT INTO menu VALUES (78, 1, '2017-05-16');
-INSERT INTO menu VALUES (79, 1, '2017-05-16');
-INSERT INTO menu VALUES (80, 1, '2017-05-16');
-INSERT INTO menu VALUES (81, 1, '2017-05-16');
-INSERT INTO menu VALUES (82, 1, '2017-05-16');
-INSERT INTO menu VALUES (83, 1, '2017-05-16');
-INSERT INTO menu VALUES (84, 1, '2017-05-16');
-INSERT INTO menu VALUES (85, 1, '2017-05-16');
-INSERT INTO menu VALUES (86, 1, '2017-05-16');
-INSERT INTO menu VALUES (87, 1, '2017-05-16');
-INSERT INTO menu VALUES (88, 1, '2017-05-16');
-INSERT INTO menu VALUES (89, 1, '2017-05-16');
-INSERT INTO menu VALUES (90, 1, '2017-05-16');
-INSERT INTO menu VALUES (91, 1, '2017-05-16');
-INSERT INTO menu VALUES (92, 1, '2017-05-16');
-INSERT INTO menu VALUES (93, 1, '2017-05-16');
-INSERT INTO menu VALUES (94, 1, '2017-05-16');
-INSERT INTO menu VALUES (95, 1, '2017-05-16');
-INSERT INTO menu VALUES (96, 1, '2017-05-16');
-INSERT INTO menu VALUES (97, 1, '2017-05-16');
-INSERT INTO menu VALUES (98, 1, '2017-05-16');
-INSERT INTO menu VALUES (99, 1, '2017-05-16');
-INSERT INTO menu VALUES (100, 1, '2017-05-16');
-INSERT INTO menu VALUES (101, 1, '2017-05-16');
-INSERT INTO menu VALUES (102, 1, '2017-05-16');
-INSERT INTO menu VALUES (103, 1, '2017-05-16');
-INSERT INTO menu VALUES (104, 1, '2017-05-16');
-INSERT INTO menu VALUES (105, 1, '2017-05-16');
-INSERT INTO menu VALUES (106, 1, '2017-05-16');
-INSERT INTO menu VALUES (107, 1, '2017-05-16');
-INSERT INTO menu VALUES (108, 1, '2017-05-16');
-INSERT INTO menu VALUES (109, 1, '2017-05-16');
-INSERT INTO menu VALUES (110, 1, '2017-05-16');
-INSERT INTO menu VALUES (111, 1, '2017-05-16');
-INSERT INTO menu VALUES (112, 1, '2017-05-16');
-INSERT INTO menu VALUES (113, 1, '2017-05-16');
-INSERT INTO menu VALUES (114, 1, '2017-05-16');
-INSERT INTO menu VALUES (115, 1, '2017-05-16');
-INSERT INTO menu VALUES (116, 1, '2017-05-16');
-INSERT INTO menu VALUES (117, 1, '2017-05-16');
-INSERT INTO menu VALUES (118, 1, '2017-05-16');
-INSERT INTO menu VALUES (119, 0, '2017-05-16');
-INSERT INTO menu VALUES (120, 0, '2017-05-16');
-INSERT INTO menu VALUES (121, 2, '2017-05-16');
-INSERT INTO menu VALUES (122, 2, '2017-05-16');
-INSERT INTO menu VALUES (123, 2, '2017-05-16');
-INSERT INTO menu VALUES (124, 2, '2017-05-16');
-INSERT INTO menu VALUES (125, 2, '2017-05-16');
-INSERT INTO menu VALUES (126, 2, '2017-05-16');
-INSERT INTO menu VALUES (127, 2, '2017-05-16');
-INSERT INTO menu VALUES (128, 2, '2017-05-16');
-INSERT INTO menu VALUES (129, 2, '2017-05-16');
-INSERT INTO menu VALUES (130, 2, '2017-05-16');
-INSERT INTO menu VALUES (131, 2, '2017-05-16');
-INSERT INTO menu VALUES (132, 1, '2017-05-17');
-INSERT INTO menu VALUES (133, 1, '2017-05-17');
-INSERT INTO menu VALUES (134, 1, '2017-05-17');
-INSERT INTO menu VALUES (135, 1, '2017-05-17');
-INSERT INTO menu VALUES (136, 1, '2017-05-17');
-INSERT INTO menu VALUES (137, 1, '2017-05-17');
-INSERT INTO menu VALUES (138, 1, '2017-05-17');
-INSERT INTO menu VALUES (139, 1, '2017-05-17');
-INSERT INTO menu VALUES (140, 1, '2017-05-17');
-INSERT INTO menu VALUES (141, 1, '2017-05-17');
-INSERT INTO menu VALUES (142, 1, '2017-05-17');
-INSERT INTO menu VALUES (143, 1, '2017-05-17');
-INSERT INTO menu VALUES (144, 1, '2017-05-17');
-INSERT INTO menu VALUES (145, 1, '2017-05-17');
-INSERT INTO menu VALUES (146, 1, '2017-05-17');
-INSERT INTO menu VALUES (147, 1, '2017-05-17');
-INSERT INTO menu VALUES (148, 1, '2017-05-17');
-INSERT INTO menu VALUES (149, 1, '2017-05-17');
-INSERT INTO menu VALUES (150, 1, '2017-05-17');
-INSERT INTO menu VALUES (151, 1, '2017-05-17');
-INSERT INTO menu VALUES (152, 1, '2017-05-17');
-INSERT INTO menu VALUES (153, 1, '2017-05-17');
-INSERT INTO menu VALUES (154, 1, '2017-05-17');
-INSERT INTO menu VALUES (155, 1, '2017-05-17');
-INSERT INTO menu VALUES (156, 1, '2017-05-17');
-INSERT INTO menu VALUES (157, 1, '2017-05-17');
-INSERT INTO menu VALUES (158, 1, '2017-05-17');
-INSERT INTO menu VALUES (159, 1, '2017-05-17');
-INSERT INTO menu VALUES (160, 1, '2017-05-17');
-INSERT INTO menu VALUES (161, 1, '2017-05-17');
-INSERT INTO menu VALUES (162, 1, '2017-05-17');
-INSERT INTO menu VALUES (163, 1, '2017-05-17');
-INSERT INTO menu VALUES (164, 1, '2017-05-17');
-INSERT INTO menu VALUES (165, 1, '2017-05-17');
-INSERT INTO menu VALUES (166, 1, '2017-05-17');
-INSERT INTO menu VALUES (167, 1, '2017-05-17');
-INSERT INTO menu VALUES (168, 1, '2017-05-17');
-INSERT INTO menu VALUES (169, 1, '2017-05-17');
-INSERT INTO menu VALUES (170, 1, '2017-05-17');
-INSERT INTO menu VALUES (171, 1, '2017-05-17');
-INSERT INTO menu VALUES (172, 1, '2017-05-17');
-INSERT INTO menu VALUES (173, 1, '2017-05-17');
-INSERT INTO menu VALUES (174, 1, '2017-05-17');
-INSERT INTO menu VALUES (175, 1, '2017-05-17');
-INSERT INTO menu VALUES (176, 1, '2017-05-17');
-INSERT INTO menu VALUES (177, 1, '2017-05-17');
-INSERT INTO menu VALUES (178, 1, '2017-05-17');
-INSERT INTO menu VALUES (179, 1, '2017-05-17');
-INSERT INTO menu VALUES (180, 1, '2017-05-17');
-INSERT INTO menu VALUES (181, 1, '2017-05-17');
-INSERT INTO menu VALUES (182, 1, '2017-05-17');
-INSERT INTO menu VALUES (183, 1, '2017-05-17');
-INSERT INTO menu VALUES (184, 1, '2017-05-17');
-INSERT INTO menu VALUES (185, 1, '2017-05-17');
-INSERT INTO menu VALUES (186, 1, '2017-05-17');
-INSERT INTO menu VALUES (187, 1, '2017-05-17');
-INSERT INTO menu VALUES (188, 1, '2017-05-17');
-INSERT INTO menu VALUES (189, 1, '2017-05-17');
-INSERT INTO menu VALUES (190, 1, '2017-05-17');
-INSERT INTO menu VALUES (191, 1, '2017-05-17');
-INSERT INTO menu VALUES (192, 1, '2017-05-17');
-INSERT INTO menu VALUES (193, 1, '2017-05-17');
-INSERT INTO menu VALUES (194, 1, '2017-05-17');
-INSERT INTO menu VALUES (195, 1, '2017-05-17');
-INSERT INTO menu VALUES (196, 1, '2017-05-17');
-INSERT INTO menu VALUES (197, 1, '2017-05-17');
-INSERT INTO menu VALUES (198, 1, '2017-05-17');
-INSERT INTO menu VALUES (199, 1, '2017-05-17');
-INSERT INTO menu VALUES (200, 1, '2017-05-17');
-INSERT INTO menu VALUES (201, 1, '2017-05-17');
-INSERT INTO menu VALUES (202, 1, '2017-05-17');
-INSERT INTO menu VALUES (203, 1, '2017-05-17');
-INSERT INTO menu VALUES (204, 1, '2017-05-17');
-INSERT INTO menu VALUES (205, 1, '2017-05-17');
-INSERT INTO menu VALUES (206, 1, '2017-05-17');
-INSERT INTO menu VALUES (207, 1, '2017-05-17');
-INSERT INTO menu VALUES (208, 1, '2017-05-17');
-INSERT INTO menu VALUES (209, 1, '2017-05-17');
-INSERT INTO menu VALUES (210, 1, '2017-05-17');
-INSERT INTO menu VALUES (211, 1, '2017-05-17');
-INSERT INTO menu VALUES (212, 1, '2017-05-17');
-INSERT INTO menu VALUES (213, 1, '2017-05-17');
-INSERT INTO menu VALUES (214, 1, '2017-05-17');
-INSERT INTO menu VALUES (215, 1, '2017-05-17');
-INSERT INTO menu VALUES (216, 1, '2017-05-17');
-INSERT INTO menu VALUES (217, 1, '2017-05-17');
-INSERT INTO menu VALUES (218, 1, '2017-05-17');
-INSERT INTO menu VALUES (219, 1, '2017-05-17');
-INSERT INTO menu VALUES (220, 1, '2017-05-17');
-INSERT INTO menu VALUES (221, 1, '2017-05-17');
-INSERT INTO menu VALUES (222, 1, '2017-05-17');
-INSERT INTO menu VALUES (223, 0, '2017-05-17');
-INSERT INTO menu VALUES (224, 0, '2017-05-17');
-INSERT INTO menu VALUES (225, 2, '2017-05-17');
-INSERT INTO menu VALUES (226, 2, '2017-05-17');
-INSERT INTO menu VALUES (227, 2, '2017-05-17');
-INSERT INTO menu VALUES (228, 2, '2017-05-17');
-INSERT INTO menu VALUES (229, 2, '2017-05-17');
-INSERT INTO menu VALUES (230, 2, '2017-05-17');
-INSERT INTO menu VALUES (231, 2, '2017-05-17');
-INSERT INTO menu VALUES (232, 2, '2017-05-17');
-INSERT INTO menu VALUES (233, 2, '2017-05-17');
-INSERT INTO menu VALUES (234, 2, '2017-05-17');
-INSERT INTO menu VALUES (235, 2, '2017-05-17');
+COPY menu (menuid, meal, date) FROM stdin;
+344	0	2017-05-19
+345	1	2017-05-19
+346	2	2017-05-19
+\.
 
 
 --
 -- Name: menu_menuid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('menu_menuid_seq', 235, true);
+SELECT pg_catalog.setval('menu_menuid_seq', 346, true);
+
+
+--
+-- Data for Name: menuexists; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY menuexists (count) FROM stdin;
+8
+\.
 
 
 --
 -- Data for Name: rating; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO rating VALUES (7255829, 1, NULL, 'lancedinh7', 1495006997);
-INSERT INTO rating VALUES (5547887, 1, NULL, 'lancedinh7', 1494998176);
-INSERT INTO rating VALUES (7254456, 1, NULL, 'lancedinh7', 1495005580);
-INSERT INTO rating VALUES (7079978, -1, NULL, 'lancedinh7', 1495007030);
-INSERT INTO rating VALUES (7254551, -1, 'dsadsa', 'lancedinh7', 1494999302);
-INSERT INTO rating VALUES (7079982, -1, 'dasdsa', 'lancedinh7', 1495005996);
-INSERT INTO rating VALUES (7079973, -1, NULL, 'lancedinh7', 1495007039);
-INSERT INTO rating VALUES (7254450, -1, NULL, 'lancedinh7', 1494999418);
-INSERT INTO rating VALUES (7079954, -1, NULL, 'lancedinh7', 1495007048);
-INSERT INTO rating VALUES (7254545, 1, NULL, 'lancedinh7', 1494999414);
-INSERT INTO rating VALUES (7079982, -1, NULL, 'newUser', 1495007851);
-INSERT INTO rating VALUES (7254551, -1, 'Y no work', 'newUser', 1495006385);
-INSERT INTO rating VALUES (7232820, 1, NULL, 'lancedinh7', 1495008655);
-INSERT INTO rating VALUES (7257506, 1, 'nice foods', 'lancedinh7', 1495008654);
-INSERT INTO rating VALUES (7080082, 1, NULL, 'lancedinh7', 1495008652);
+COPY rating (foodid, rating, comment, username, "time") FROM stdin;
+7255829	1	\N	lancedinh7	1495006997
+5547887	1	\N	lancedinh7	1494998176
+7254456	1	\N	lancedinh7	1495005580
+7079978	-1	\N	lancedinh7	1495007030
+7254551	-1	dsadsa	lancedinh7	1494999302
+7079982	-1	dasdsa	lancedinh7	1495005996
+7079973	-1	\N	lancedinh7	1495007039
+7254450	-1	\N	lancedinh7	1494999418
+7079954	-1	\N	lancedinh7	1495007048
+7254545	1	\N	lancedinh7	1494999414
+7079982	-1	\N	newUser	1495007851
+7254551	-1	Y no work	newUser	1495006385
+7232820	1	\N	lancedinh7	1495008655
+7257506	1	nice foods	lancedinh7	1495008654
+7080082	1	\N	lancedinh7	1495008652
+\.
 
 
 --
 -- Data for Name: serves; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+COPY serves (servingname, menuid) FROM stdin;
+\.
 
 
 --
 -- Data for Name: servinglocation; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+COPY servinglocation (servingname, cafename) FROM stdin;
+\.
 
 
 --
 -- Data for Name: worksat; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO worksat VALUES (12345678, 'Union Cafe');
-INSERT INTO worksat VALUES (11223344, 'Moench Cafe');
+COPY worksat (employeeid, cafename) FROM stdin;
+12345678	Union Cafe
+11223344	Union Cafe
+\.
 
 
 --
@@ -1138,11 +931,18 @@ ALTER TABLE ONLY worksat
 
 
 --
+-- Name: index_sessiontoken; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX index_sessiontoken ON employee USING btree (sessiontoken);
+
+
+--
 -- Name: contains contains_foodid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY contains
-    ADD CONSTRAINT contains_foodid_fkey FOREIGN KEY (foodid) REFERENCES food(foodid);
+    ADD CONSTRAINT contains_foodid_fkey FOREIGN KEY (foodid) REFERENCES food(foodid) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -1150,7 +950,7 @@ ALTER TABLE ONLY contains
 --
 
 ALTER TABLE ONLY contains
-    ADD CONSTRAINT contains_menuid_fkey FOREIGN KEY (menuid) REFERENCES menu(menuid);
+    ADD CONSTRAINT contains_menuid_fkey FOREIGN KEY (menuid) REFERENCES menu(menuid) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -1178,14 +978,6 @@ ALTER TABLE ONLY worksat
 
 
 --
--- Name: contains lnk_food_contains; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY contains
-    ADD CONSTRAINT lnk_food_contains FOREIGN KEY (foodid) REFERENCES food(foodid) MATCH FULL ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
 -- Name: rating rating_foodid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1198,7 +990,7 @@ ALTER TABLE ONLY rating
 --
 
 ALTER TABLE ONLY serves
-    ADD CONSTRAINT serves_menuid_fkey FOREIGN KEY (menuid) REFERENCES menu(menuid);
+    ADD CONSTRAINT serves_menuid_fkey FOREIGN KEY (menuid) REFERENCES menu(menuid) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
