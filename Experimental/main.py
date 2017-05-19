@@ -161,6 +161,14 @@ def addComment():
     #
     # addComment()
 
+@app.route("/search/")
+def search():
+    query = request.args.get('query')
+    meal = request.args.get('meal')
+    app.logger.debug("query " + query)
+    app.logger.debug("meal " + meal)
+    return jsonify(DB.searchFood( str(query),int(meal)))
+
 @app.route("/upvote/")
 def upvoteFood():
     foodid = request.args.get('food')

@@ -57,9 +57,14 @@ function getServingLocaiton() {
 
 function search() {
     console.log("search");
+    newMealState = mealState-1;
+    if(newMealState >= 3){
+        newMealState = 1
+    }
+    console.log("mealstate: %d", newMealState)
     $.ajax({
         type: "GET",
-        url: "/search?query=" + foodID + "&meal=" + mealState,
+        url: "/search?query=" + $('#usr').val() + "&meal=" + newMealState,
         contentType: "application/json; charset=utf-8",
         async: false,
         success: function (data) {

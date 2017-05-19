@@ -56,6 +56,12 @@ class myDB(object):
         #     print Exception
         #     conn.rollback()
         
+    def searchFood(self, searchString, meal):
+        query = "SELECT food.foodname, food.description, food.vegetarian, food.vegan, food.glutenfree, food.rating FROM  (food join contains ON food.foodid = contains.foodid JOIN menu ON contains.menuid = menu.menuid) WHERE menu.meal = %s AND foodname LIKE %s"
+        data = (str(meal), '%' + str(searchString) + '%')
+        cur.execute(query, data)
+        return cur.fetchall()
+
     def getFoodID(self, foodName):
         query = "SELECT foodid FROM food WHERE foodname = %s"
         data = (foodName,)
