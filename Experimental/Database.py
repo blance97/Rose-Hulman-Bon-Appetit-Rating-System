@@ -64,10 +64,14 @@ class myDB(object):
         return cur.fetchall()
 
     def getFoodName(self, foodid):
-        query = "SELECT foodname FROM food WHERE foodid = %s"
-        data = (foodid,)
-        cur.execute(query, data)
-        return cur.fetchall()
+        try:
+            query = "SELECT foodname FROM food WHERE foodid = %s"
+            data = (foodid,)
+            cur.execute(query, data)
+            return cur.fetchall()
+        except:
+            print 'COULD NOT COMPLETE QUERY'
+            conn.rollback()
 
     def registerUser(self, email, username, password):
         try:
@@ -125,17 +129,19 @@ class myDB(object):
         # retrieve the records from the database
         records = cur.fetchall()
         return records
+    
+    def getServingLocations(self):
+        query = "SELECT * FROM servinglocation"
+        cur.execute(query)
+        current_app.logger.debug("GETSERVING LICATOIN")
+        return cur.fetchall()
 
-    def checkUser(self, email, password):
-        query = "SELECT username FROM Customer WHERE email = %s AND password = %s"
-        data = (email, password)
+    def getUserPassword(self, email):
+        query = "SELECT password FROM Customer WHERE email = %s"
+        data = (email,)
         cur.execute(query, data)
-        conn.commit()
-        rowcount = cur.rowcount
-        if rowcount == 1: #email and password are valid
-            return 1
-        else:
-            return 0
+        return cur.fetchall()
+        
             
     def getUser(self, sid):
         query = "SELECT username FROM customer WHERE sessiontoken = %s"
