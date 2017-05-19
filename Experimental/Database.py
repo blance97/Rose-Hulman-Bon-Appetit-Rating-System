@@ -188,23 +188,23 @@ class myDB(object):
             conn.rollback()
 
     def updateSessionTokenEmployee(self,login,sessionToken,eid):
-        try:
-            if(login == True):
-                query = "UPDATE employee SET sessiontoken = %s WHERE employeeid = %s"
-                data = (sessionToken,eid)
-                cur.execute(query, data)
-                conn.commit()
-            else:
-                query = "UPDATE employee SET sessionToken = 0 WHERE sessiontoken = %s"
-                data = (sessionToken,)
-                cur.execute(query, data)
-                conn.commit()
-        except:
-            conn.rollback()
+        # try:
+        if(login == True):
+            query = "UPDATE employee SET sessiontoken = %s WHERE employeeid = %s"
+            data = (sessionToken,eid)
+            cur.execute(query, data)
+            conn.commit()
+        else:
+            query = "UPDATE employee SET sessionToken = 0 WHERE sessiontoken = %s"
+            data = (sessionToken,)
+            cur.execute(query, data)
+            conn.commit()
+        # except:
+        #     conn.rollback()
 
     def getEmployeeID(self,eid):
         query = "SELECT password FROM Employee WHERE employeeid = %s"
-        data = (email,)
+        data = (eid,)
         cur.execute(query, data)
         return cur.fetchall()
         

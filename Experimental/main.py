@@ -291,12 +291,10 @@ def logoutEmployee():
 def employeeLogin():
     eid = request.form['employeeid']
     password = request.form['epassword']
-    try:
-        eid = DB.getEmployeeID(eid)
-    except:
-        app.logger.debug("username/pass dne")
-        abort(401, "USERNAME DOES NOT EXIST")
-    if bcrypt.check_password_hash(eid, password) != 1:
+    eidPassw = DB.getEmployeeID(eid)[0][0]
+    app.logger.debug("EID PASSWORD: " + str(eidPassw))
+    app.logger.debug("TRUE OR FALSSE: %d",bcrypt.check_password_hash(eidPassw, password))
+    if bcrypt.check_password_hash(eidPassw, password) != 1:
         app.logger.debug("employee id/pass dne")
         abort(401, "employee id/pass DOES NOT EXIST")
     app.logger.debug("not zero")
