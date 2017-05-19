@@ -247,7 +247,11 @@ def Renderlogin():
     if(email == adminEmail and password == adminPass):
         app.logger.debug("admin success")
         return redirect('/admin')
-    dbPass = DB.getUserPassword(email)[0][0]
+    try:
+        dbPass = DB.getUserPassword(email)[0][0]
+    except:
+        app.logger.debug("username/pass dne")
+        abort(401, "USERNAME DOES NOT EXIST")
     app.logger.debug(dbPass)
     if bcrypt.check_password_hash(dbPass, password) != 1:
         app.logger.debug("username/pass dne")
@@ -272,14 +276,19 @@ def logoutEmployee():
     sid = request.cookies.get('EmployeeSessionID')
     DB.updateSessionTokenEmployee(False, sid, "N/A") 
     resp = make_response()
-    resp.set_cookie('SessionID', "0")
+    resp.set_cookie('EmployeeSessionID', "0")
     return resp
 
 @app.route("/employeeLogin",  methods=['GET','POST'])
 def employeeLogin():
     eid = request.form['employeeid']
     password = request.form['epassword']
-    if DB.checkEmployee(str(eid),str(password)) != 1:
+    try:
+        eid = DB.getEmployeeID(eid)
+    except:
+        app.logger.debug("username/pass dne")
+        abort(401, "USERNAME DOES NOT EXIST")
+    if bcrypt.check_password_hash(eid, password) != 1:
         app.logger.debug("employee id/pass dne")
         abort(401, "employee id/pass DOES NOT EXIST")
     app.logger.debug("not zero")
@@ -356,7 +365,7 @@ def addEmployee():
     app.logger.debug("employeeid: " + eid + "\n" + "fname: " + fname + "\nlname: " + str(lname) + "\nPassword: " + str(password1) + "\nPassword2: " + str(password2))
     if password1 != password2:
         abort(400, '<Passwords do not match>')
-    if DB.registerEmployee(str(eid), str(fname), str(lname), str(password1), str(work)) != 1:
+    if DB.registerEmployee(str(eid), str(fname), str(lname), bcrypt.generate_password_hash(str(password1)), str(work)) != 1:
         app.logger.debug("employee id already there")
         abort(401, "EMPLOYEE ALREADY EXISTS")
     app.logger.debug("added successfully")

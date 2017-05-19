@@ -196,17 +196,12 @@ class myDB(object):
         except:
             conn.rollback()
 
-    def checkEmployee(self,eid,password):
-        query = "SELECT employeeid FROM Employee WHERE employeeid = %s AND password = %s"
-        data = (eid, password)
+    def getEmployeeID(self,eid):
+        query = "SELECT password FROM Employee WHERE employeeid = %s"
+        data = (email,)
         cur.execute(query, data)
-        conn.commit()
-        rowcount = cur.rowcount
-        if rowcount == 1: #eid and password are valid
-            return 1
-        else:
-            return 0
-
+        return cur.fetchall()
+        
     def getEmployees(self):
         query = "SELECT * FROM employeeview;"
         cur.execute(query)
