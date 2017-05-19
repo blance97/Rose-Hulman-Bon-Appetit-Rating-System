@@ -12,10 +12,12 @@ import psycopg2
 import ConfigParser
 from uuid import uuid4
 from Database import myDB
+from flask_bcrypt import Bcrypt
 
 """ Initial setup of imports and stuff"""
 
 app = Flask(__name__)
+bcrypt = Bcrypt(app)
 app.secret_key = "any random string"
 app.logger.addHandler(logging.StreamHandler(sys.stdout))
 app.logger.setLevel(logging.DEBUG)
@@ -192,7 +194,7 @@ def register():
     if password1 != password2:
         abort(400, '<Passwords do not match>')
     else:
-        DB.registerUser(str(email), str(username), str(password1))
+        DB.registerUser(str(email), str(username), bcrypt.generate_password_hash(str(password1)))
         return current_app.send_static_file('index.html')
 
 @app.route("/getBreakfast")
@@ -221,6 +223,7 @@ def checkLogin():
     if(sid == 0):
         return current_app.send_static_file('index.html')
     return ('',204)
+
 @app.route("/getUser")
 def getUsername():
     sid = request.cookies.get('SessionID')
@@ -229,6 +232,10 @@ def getUsername():
         return jsonify(DB.getUser(sid))
     else:
         return current_app.send_static_file('index.html')
+
+@app.route("/getServingLocation")
+def getServingLocations():
+    return jsonify(DB.getServingLocations())
 
 @app.route("/login",  methods=['GET','POST'])
 def Renderlogin():
@@ -240,7 +247,9 @@ def Renderlogin():
     if(email == adminEmail and password == adminPass):
         app.logger.debug("admin success")
         return redirect('/admin')
-    if DB.checkUser(str(email),str(password)) != 1:
+    dbPass = DB.getUserPassword(email)[0][0]
+    app.logger.debug(dbPass)
+    if bcrypt.check_password_hash(dbPass, password) != 1:
         app.logger.debug("username/pass dne")
         abort(401, "USERNAME DOES NOT EXIST")
     app.logger.debug("not zero")
